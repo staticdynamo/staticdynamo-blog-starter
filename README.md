@@ -1,0 +1,1 @@
+# staticdynamo-blog-starter
