@@ -1,1 +1,1 @@
-# staticdynamo-blog-starter
+# StaticDynamo's starter blog
