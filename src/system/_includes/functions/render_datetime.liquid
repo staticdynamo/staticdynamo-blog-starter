@@ -1,0 +1,700 @@
+{% comment -%}---------------------------------------------------------------------------
+Function: render_datetime
+
+Description: Format and render the datetime based on the given locale and format. 
+
+Usage:  {% include dynamo function="render_datetime" datetime=page.date 
+            locale="en-us" date_format="long" time_format="none" -%}
+
+        {% include dynamo function="render_datetime" datetime=page.date 
+            date_format="ISO8601" -%}
+        The above code renders the current page date in ISO 8601 format - a format 
+        independent of the locale. 
+
+Parameters:
+    * datetime      (object) - The datetime to format and render.
+    * locale        (string) - The locale for formatting and localizing the datetime 
+                               rendering. For example, when date format is "short", 
+                               January 9, 2009 renders as 1/9/09 for the "en-us" locale, 
+                               and 09/01/2009 for the "fr-fr" locale.
+    * date_format   (string) - Date format.  It can be one of the following standard
+                               date format strings or any custom date formats. If 
+                               date_format is "ISO8601", time_format has to be either 
+                               "none" or "ISO8601". Default: "none"
+
+      Standard date formats    Description                      Examples for January 9, 2009
+      "none"                   Do not render date in the output
+      "ISO8601"                ISO 8601 format                  2009-01-09, regardless of the locale
+      "default"                Default date format              Jan 9, 2009 (en-us)
+                                                                9 janv. 2009 (fr-fr)
+      "short"                  Short date format                1/9/09 (en-us)
+                                                                09/01/2009 (fr-fr)
+      "medium"                 Medium date format               Jan 9, 2009 (en-us)
+                                                                9 janv. 2009 (fr-fr)
+      "long"                   Long date format                 January 9, 2009 (en-us)
+                                                                9 janvier 2009 (fr-fr)
+      "full"                   Full date format                 Friday, January 9, 2009 (en-us)
+                                                                vendredi 9 janvier 2009 (fr-fr)
+    
+    * time_format   (string) - Time format.  It can be one of the following standard
+                               time format strings or any custom time formats. If 
+                               time_format is "ISO8601", date_format has to be either 
+                               "none" or "ISO8601". Default: "none"
+
+      Standard time formats    Description                      Examples for 05:07:04 AM
+      "none"                   Do not render time in the output
+      "ISO8601"                ISO 8601 format                  05:14:28
+      "default"                Default time format              5:07:04 AM (en-us)
+                                                                05:07:04 (fr-fr)
+      "short"                  Short time format                5:07 AM (en-us)
+                                                                05:07 (fr-fr)
+      "medium"                 Medium time format               5:07:04 AM (en-us)
+                                                                05:07:04 (fr-fr)
+      "long"                   Long time format                 5:07:04 AM PST (en-us)
+                                                                05:07:04 PST (fr-fr)
+      "full"                   Full time format                 5:07:04 AM Pacific Standard Time (en-us)
+                                                                05:07:04 heure normale du Pacifique nord-américain (fr-fr)
+------------------------------------------------------------------------{% endcomment -%}
+
+{% comment -%}ISO 8601 format if either date_format or time_format equals "ISO8601"{% endcomment -%}
+{% if include.params.date_format == "ISO8601" or include.params.time_format == "ISO8601" -%}
+    {% if include.params.date_format == "ISO8601" -%}
+        {% if include.params.time_format == "ISO8601" -%}
+            {% assign datetime_format = "%Y-%m-%dT%H:%M:%S" -%}
+        {% else -%}
+            {% assign datetime_format = "%Y-%m-%d" -%}
+        {% endif -%}
+    {% else -%}
+        {% assign datetime_format = "%H:%M:%S" -%}
+    {% endif -%}
+    {{ include.params.datetime | date: datetime_format -}}
+
+{% else -%}
+    {% assign locale = include.params.locale | default: CURRENT_LOCALE | downcase -%}
+    {% case locale -%}
+        {% comment -%}Americas{% endcomment -%}
+        {% when "en-us" -%}
+            {% comment -%}English (United States){% endcomment -%}
+            {% case include.params.date_format -%}
+                {% when "none" -%}{% assign date_format = "" -%}
+                {% when "default" -%}{% assign date_format = "%b %-d, %Y" -%}
+                {% when "short" -%}{% assign date_format = "%-m/%-d/%y" -%}
+                {% when "medium" -%}{% assign date_format = "%b %-d, %Y" -%}
+                {% when "long" -%}{% assign date_format = "%B %-d, %Y" -%}
+                {% when "full" -%}{% assign date_format = "%A, %B %-d, %Y" -%}
+                {% else -%}{% assign date_format = include.params.date_format -%}
+            {% endcase -%}
+            {% case include.params.time_format -%}
+                {% when "none" -%}{% assign time_format = "" -%}
+                {% when "default" -%}{% assign time_format = "%-I:%M:%S %p" -%}
+                {% when "short" -%}{% assign time_format = "%-I:%M %p" -%}
+                {% when "medium" -%}{% assign time_format = "%-I:%M:%S %p" -%}
+                {% when "long" -%}{% assign time_format = "%-I:%M:%S %p %Z" -%}
+                {% when "full" -%}{% assign time_format = "%-I:%M:%S %p %Z" -%}
+                {% else -%}{% assign time_format = include.params.time_format -%}
+            {% endcase -%}
+            {% assign datetime_format = date_format | append: " " | append: time_format | strip -%}
+            {{ include.params.datetime | date: datetime_format -}}
+
+        {% when "en-ca" -%}
+            {% comment -%}English (Canada){% endcomment -%}
+            {% case include.params.date_format -%}
+                {% when "none" -%}{% assign date_format = "" -%}
+                {% when "default" -%}{% assign date_format = "%b %-d, %Y" -%}
+                {% when "short" -%}{% assign date_format = "%Y-%m-%d" -%}
+                {% when "medium" -%}{% assign date_format = "%b %-d, %Y" -%}
+                {% when "long" -%}{% assign date_format = "%B %-d, %Y" -%}
+                {% when "full" -%}{% assign date_format = "%A, %B %-d, %Y" -%}
+                {% else -%}{% assign date_format = include.params.date_format -%}
+            {% endcase -%}
+            {% case include.params.time_format -%}
+                {% when "none" -%}{% assign time_format = "" -%}
+                {% when "default" -%}{% assign time_format = "%-I:%M:%S %p" -%}
+                {% when "short" -%}{% assign time_format = "%-I:%M %p" -%}
+                {% when "medium" -%}{% assign time_format = "%-I:%M:%S %p" -%}
+                {% when "long" -%}{% assign time_format = "%-I:%M:%S %p %Z" -%}
+                {% when "full" -%}{% assign time_format = "%-I:%M:%S %p %Z" -%}
+                {% else -%}{% assign time_format = include.params.time_format -%}
+            {% endcase -%}
+            {% assign datetime_format = date_format | append: " " | append: time_format | strip -%}
+            {{ include.params.datetime | date: datetime_format -}}
+
+        {% when "es-mx" -%}
+            {% comment -%}Español (México){% endcomment -%}
+
+        {% when "fr-ca" -%}
+            {% comment -%}Français (Canada){% endcomment -%}
+
+        {% when "nl-nl" -%}
+
+        {% when "pt-br" -%}
+
+        {% comment -%}Europe, Middle East, Africa{% endcomment -%}
+        {% when "bs-cyrl-ba" -%}
+
+        {% when "bs-latn-ba" -%}
+
+        {% when "ca-es" -%}
+
+        {% when "cs-cz" -%}
+
+        {% when "da-dk" -%}
+
+        {% when "de-at" -%}
+
+        {% when "de-ch" -%}
+
+        {% when "de-de" -%}
+            {% comment -%}Deutsch{% endcomment -%}
+            {% case include.params.date_format -%}
+                {% when "none" -%}{% assign date_format = "" -%}
+                {% when "default" -%}{% assign date_format = "%d.%m.%Y" -%}
+                {% when "short" -%}{% assign date_format = "%d.%m.%y" -%}
+                {% when "medium" -%}{% assign date_format = "%d.%m.%Y" -%}
+                {% when "long" -%}{% assign date_format = "%-d. %B %Y" -%}
+                {% when "full" -%}{% assign date_format = "%A, %-d. %B %Y" -%}
+                {% else -%}{% assign date_format = include.params.date_format -%}
+            {% endcase -%}
+            {% case include.params.time_format -%}
+                {% when "none" -%}{% assign time_format = "" -%}
+                {% when "default" -%}{% assign time_format = "%H:%M:%S" -%}
+                {% when "short" -%}{% assign time_format = "%H:%M" -%}
+                {% when "medium" -%}{% assign time_format = "%H:%M:%S" -%}
+                {% when "long" -%}{% assign time_format = "%H:%M:%S %Z" -%}
+                {% when "full" -%}{% assign time_format = "%H:%M:%S %Z" -%}
+                {% else -%}{% assign time_format = include.params.time_format -%}
+            {% endcase -%}
+            {% assign datetime_format = date_format | append: " " | append: time_format | strip -%}
+            {{ include.params.datetime | date: datetime_format | 
+                replace: "Sunday", "Sonntag" | replace: "Sun", "So." |
+                replace: "Monday", "Montag" | replace: "Mon", "Mo." | 
+                replace: "Tuesday", "Dienstag" | replace: "Tue", "Di." |
+                replace: "Wednesday", "Mittwoch" | replace: "Wed", "Mi." |
+                replace: "Thursday", "Donnerstag" | replace: "Thu", "Do." |
+                replace: "Friday", "Freitag" | replace: "Fri", "Fr." |
+                replace: "Saturday", "Samstag" | replace: "Sat", "Sa." |
+                replace: "January", "Januar" | replace: "Jan", "Jan." |
+                replace: "February", "Februar" | replace: "Feb", "Feb." |
+                replace: "March", "März" | replace: "Mar", "März" |
+                replace: "April", "April" | replace: "Apr", "Apr." |
+                replace: "May", "Mai" | replace: "May", "Mai" |
+                replace: "June", "Juni" | replace: "Jun", "Juni" |
+                replace: "July", "Juli" | replace: "Jul", "Juli" |
+                replace: "August", "August" | replace: "Aug", "Aug." |
+                replace: "September", "September" | replace: "Sep", "Sep." |
+                replace: "October", "Oktober" | replace: "Oct", "Okt." |
+                replace: "November", "November" | replace: "Nov", "Nov." |
+                replace: "December", "Dezember" | replace: "Dec", "Dez." -}}
+
+        {% when "et-ee" -%}
+
+        {% when "en-ie" -%}
+
+        {% when "en-za" -%}
+
+        {% when "en-gb" -%}
+            {% comment -%}English (United Kingdom){% endcomment -%}
+            {% case include.params.date_format -%}
+                {% when "none" -%}{% assign date_format = "" -%}
+                {% when "default" -%}{% assign date_format = "%-d %b %Y" -%}
+                {% when "short" -%}{% assign date_format = "%d/%m/%y" -%}
+                {% when "medium" -%}{% assign date_format = "%-d %b %Y" -%}
+                {% when "long" -%}{% assign date_format = "%-d %B %Y" -%}
+                {% when "full" -%}{% assign date_format = "%A, %-d %B %Y" -%}
+                {% else -%}{% assign date_format = include.params.date_format -%}
+            {% endcase -%}
+            {% case include.params.time_format -%}
+                {% when "none" -%}{% assign time_format = "" -%}
+                {% when "default" -%}{% assign time_format = "%H:%M:%S" -%}
+                {% when "short" -%}{% assign time_format = "%H:%M" -%}
+                {% when "medium" -%}{% assign time_format = "%H:%M:%S" -%}
+                {% when "long" -%}{% assign time_format = "%H:%M:%S %Z" -%}
+                {% when "full" -%}{% assign time_format = "%H:%M:%S %Z" -%}
+                {% else -%}{% assign time_format = include.params.time_format -%}
+            {% endcase -%}
+            {% assign datetime_format = date_format | append: " " | append: time_format | strip -%}
+            {{ include.params.datetime | date: datetime_format -}}
+
+        {% when "es-es" -%}
+            {% comment -%}Español{% endcomment -%}
+            {% case include.params.date_format -%}
+                {% when "none" -%}{% assign date_format = "" -%}
+                {% when "default" -%}{% assign date_format = "%-d %b %Y" -%}
+                {% when "short" -%}{% assign date_format = "%-d/%-m/%y" -%}
+                {% when "medium" -%}{% assign date_format = "%-d %b %Y" -%}
+                {% when "long" -%}{% assign date_format = "%-d de %B de %Y" -%}
+                {% when "full" -%}{% assign date_format = "%A, %-d de %B de %Y" -%}
+                {% else -%}{% assign date_format = include.params.date_format -%}
+            {% endcase -%}
+            {% case include.params.time_format -%}
+                {% when "none" -%}{% assign time_format = "" -%}
+                {% when "default" -%}{% assign time_format = "%-H:%M:%S" -%}
+                {% when "short" -%}{% assign time_format = "%-H:%M" -%}
+                {% when "medium" -%}{% assign time_format = "%-H:%M:%S" -%}
+                {% when "long" -%}{% assign time_format = "%-H:%M:%S %Z" -%}
+                {% when "full" -%}{% assign time_format = "%-H:%M:%S %Z" -%}
+                {% else -%}{% assign time_format = include.params.time_format -%}
+            {% endcase -%}
+            {% assign datetime_format = date_format | append: " " | append: time_format | strip -%}
+            {{ include.params.datetime | date: datetime_format | 
+                replace: "Sunday", "domingo" | replace: "Sun", "dom." |
+                replace: "Monday", "lunes" | replace: "Mon", "lun." | 
+                replace: "Tuesday", "martes" | replace: "Tue", "mar." |
+                replace: "Wednesday", "miércoles" | replace: "Wed", "mié." |
+                replace: "Thursday", "jueves" | replace: "Thu", "jue." |
+                replace: "Friday", "viernes" | replace: "Fri", "vie." |
+                replace: "Saturday", "sábado" | replace: "Sat", "sáb." |
+                replace: "January", "enero" | replace: "Jan", "ene." |
+                replace: "February", "febrero" | replace: "Feb", "feb." |
+                replace: "March", "marzo" | replace: "Mar", "mar." |
+                replace: "April", "abril" | replace: "Apr", "abr." |
+                replace: "May", "mayo" | replace: "May", "may." |
+                replace: "June", "junio" | replace: "Jun", "jun." |
+                replace: "July", "julio" | replace: "Jul", "jul." |
+                replace: "August", "agosto" | replace: "Aug", "ago." |
+                replace: "September", "septiembre" | replace: "Sep", "sept." |
+                replace: "October", "octubre" | replace: "Oct", "oct." |
+                replace: "November", "noviembre" | replace: "Nov", "nov." |
+                replace: "December", "diciembre" | replace: "Dec", "dic." -}}
+
+        {% when "eu-es" -%}
+
+        {% when "fr-be" -%}
+
+        {% when "fr-ch" -%}
+
+        {% when "fr-fr" -%}
+            {% comment -%}Français{% endcomment -%}
+            {% case include.params.date_format -%}
+                {% when "none" -%}{% assign date_format = "" -%}
+                {% when "default" -%}{% assign date_format = "%-d %b %Y" -%}
+                {% when "short" -%}{% assign date_format = "%d/%m/%Y" -%}
+                {% when "medium" -%}{% assign date_format = "%-d %b %Y" -%}
+                {% when "long" -%}{% assign date_format = "%-d %B %Y" -%}
+                {% when "full" -%}{% assign date_format = "%A %-d %B %Y" -%}
+                {% else -%}{% assign date_format = include.params.date_format -%}
+            {% endcase -%}
+            {% case include.params.time_format -%}
+                {% when "none" -%}{% assign time_format = "" -%}
+                {% when "default" -%}{% assign time_format = "%H:%M:%S" -%}
+                {% when "short" -%}{% assign time_format = "%H:%M" -%}
+                {% when "medium" -%}{% assign time_format = "%H:%M:%S" -%}
+                {% when "long" -%}{% assign time_format = "%H:%M:%S %Z" -%}
+                {% when "full" -%}{% assign time_format = "%H:%M:%S %Z" -%}
+                {% else -%}{% assign time_format = include.params.time_format -%}
+            {% endcase -%}
+            {% assign datetime_format = date_format | append: " " | append: time_format | strip -%}
+            {{ include.params.datetime | date: datetime_format | 
+                replace: "Sunday", "dimanche" | replace: "Sun", "dim." |
+                replace: "Monday", "lundi" | replace: "Mon", "lun." | 
+                replace: "Tuesday", "mardi" | replace: "Tue", "mar." |
+                replace: "Wednesday", "mercredi" | replace: "Wed", "mer." |
+                replace: "Thursday", "jeudi" | replace: "Thu", "jeu." |
+                replace: "Friday", "vendredi" | replace: "Fri", "ven." |
+                replace: "Saturday", "samedi" | replace: "Sat", "sam." |
+                replace: "January", "janvier" | replace: "Jan", "janv." |
+                replace: "February", "février" | replace: "Feb", "févr." |
+                replace: "March", "mars" | replace: "Mar", "mars" |
+                replace: "April", "avril" | replace: "Apr", "avr." |
+                replace: "May", "mai" | replace: "May", "mai" |
+                replace: "June", "juin" | replace: "Jun", "juin" |
+                replace: "July", "juillet" | replace: "Jul", "juil." |
+                replace: "August", "août" | replace: "Aug", "août" |
+                replace: "September", "septembre" | replace: "Sep", "sept." |
+                replace: "October", "octobre" | replace: "Oct", "oct." |
+                replace: "November", "novembre" | replace: "Nov", "nov." |
+                replace: "December", "décembre" | replace: "Dec", "déc." -}}
+
+        {% when "gl-es" -%}
+
+        {% when "hr-hr" -%}
+
+        {% when "is-is" -%}
+
+        {% when "it-ch" -%}
+
+        {% when "it-it" -%}
+            {% case include.params.date_format -%}
+                {% when "none" -%}{% assign date_format = "" -%}
+                {% when "default" -%}{% assign date_format = "%d %b %Y" -%}
+                {% when "short" -%}{% assign date_format = "%d/%m/%y" -%}
+                {% when "medium" -%}{% assign date_format = "%d %b %Y" -%}
+                {% when "long" -%}{% assign date_format = "%-d %B %Y" -%}
+                {% when "full" -%}{% assign date_format = "%A %-d %B %Y" -%}
+                {% else -%}{% assign date_format = include.params.date_format -%}
+            {% endcase -%}
+            {% case include.params.time_format -%}
+                {% when "none" -%}{% assign time_format = "" -%}
+                {% when "default" -%}{% assign time_format = "%H:%M:%S" -%}
+                {% when "short" -%}{% assign time_format = "%H:%M" -%}
+                {% when "medium" -%}{% assign time_format = "%H:%M:%S" -%}
+                {% when "long" -%}{% assign time_format = "%H:%M:%S %Z" -%}
+                {% when "full" -%}{% assign time_format = "%H:%M:%S %Z" -%}
+                {% else -%}{% assign time_format = include.params.time_format -%}
+            {% endcase -%}
+            {% assign datetime_format = date_format | append: " " | append: time_format | strip -%}
+            {{ include.params.datetime | date: datetime_format | 
+                replace: "Sunday", "domenica" | replace: "Sun", "dom" |
+                replace: "Monday", "lunedì" | replace: "Mon", "lun" | 
+                replace: "Tuesday", "martedì" | replace: "Tue", "mar" |
+                replace: "Wednesday", "mercoledì" | replace: "Wed", "mer" |
+                replace: "Thursday", "giovedì" | replace: "Thu", "gio" |
+                replace: "Friday", "venerdì" | replace: "Fri", "ven" |
+                replace: "Saturday", "sabato" | replace: "Sat", "sab" |
+                replace: "January", "gennaio" | replace: "Jan", "gen" |
+                replace: "February", "febbraio" | replace: "Feb", "feb" |
+                replace: "March", "marzo" | replace: "Mar", "mar" |
+                replace: "April", "aprile" | replace: "Apr", "apr" |
+                replace: "May", "maggio" | replace: "May", "mag" |
+                replace: "June", "giugno" | replace: "Jun", "giu" |
+                replace: "July", "luglio" | replace: "Jul", "lug" |
+                replace: "August", "agosto" | replace: "Aug", "ago" |
+                replace: "September", "settembre" | replace: "Sep", "set" |
+                replace: "October", "ottobre" | replace: "Oct", "ott" |
+                replace: "November", "novembre" | replace: "Nov", "nov" |
+                replace: "December", "dicembre" | replace: "Dec", "dic" -}}
+
+        {% when "lv-lv" -%}
+
+        {% when "lt-lt" -%}
+
+        {% when "hu-hu" -%}
+
+        {% when "nl-be" -%}
+
+        {% when "nl-nl" -%}
+
+        {% when "nb-no" -%}
+
+        {% when "pl-pl" -%}
+
+        {% when "pt-pt" -%}
+
+        {% when "ro-ro" -%}
+
+        {% when "sk-sk" -%}
+
+        {% when "sl-si" -%}
+
+        {% when "sr-latn-rs" -%}
+
+        {% when "fi-fi" -%}
+
+        {% when "sv-se" -%}
+
+        {% when "tr-tr" -%}
+
+        {% when "el-gr" -%}
+
+        {% when "bg-bg" -%}
+
+        {% when "ru-ru" -%}
+            {% case include.params.date_format -%}
+                {% when "none" -%}{% assign date_format = "" -%}
+                {% when "default" -%}{% assign date_format = "%-d %b %Y г." -%}
+                {% when "short" -%}{% assign date_format = "%d.%m.%y" -%}
+                {% when "medium" -%}{% assign date_format = "%-d %b %Y г." -%}
+                {% when "long" -%}{% assign date_format = "%-d %B %Y г." -%}
+                {% when "full" -%}{% assign date_format = "%A, %-d %B %Y г." -%}
+                {% else -%}{% assign date_format = include.params.date_format -%}
+            {% endcase -%}
+            {% case include.params.time_format -%}
+                {% when "none" -%}{% assign time_format = "" -%}
+                {% when "default" -%}{% assign time_format = "%-H:%M:%S" -%}
+                {% when "short" -%}{% assign time_format = "%-H:%M" -%}
+                {% when "medium" -%}{% assign time_format = "%-H:%M:%S" -%}
+                {% when "long" -%}{% assign time_format = "%-H:%M:%S %Z" -%}
+                {% when "full" -%}{% assign time_format = "%-H:%M:%S %Z" -%}
+                {% else -%}{% assign time_format = include.params.time_format -%}
+            {% endcase -%}
+            {% assign datetime_format = date_format | append: " " | append: time_format | strip -%}
+            {{ include.params.datetime | date: datetime_format | 
+                replace: "Sunday", "воскресенье" | replace: "Sun", "вс" |
+                replace: "Monday", "понедельник" | replace: "Mon", "пн" | 
+                replace: "Tuesday", "вторник" | replace: "Tue", "вт" |
+                replace: "Wednesday", "среда" | replace: "Wed", "ср" |
+                replace: "Thursday", "Четверг" | replace: "Thu", "чт" |
+                replace: "Friday", "пятница" | replace: "Fri", "пт" |
+                replace: "Saturday", "суббота" | replace: "Sat", "сб" |
+                replace: "January", "января" | replace: "Jan", "янв." |
+                replace: "February", "февраля" | replace: "Feb", "февр." |
+                replace: "March", "марта" | replace: "Mar", "мар." |
+                replace: "April", "апреля" | replace: "Apr", "апр." |
+                replace: "May", "мая" | replace: "May", "мая" |
+                replace: "June", "июня" | replace: "Jun", "июн." |
+                replace: "July", "июля" | replace: "Jul", "июл." |
+                replace: "August", "августа" | replace: "Aug", "авг." |
+                replace: "September", "сентября" | replace: "Sep", "сент." |
+                replace: "October", "октября" | replace: "Oct", "окт." |
+                replace: "November", "ноября" | replace: "Nov", "нояб." |
+                replace: "December", "декабря" | replace: "Dec", "дек." -}}
+
+        {% when "sr-cyrl-rs" -%}
+
+        {% when "uk-ua" -%}
+
+        {% when "he-il" -%}
+
+        {% when "ar-sa" -%}
+
+        {% comment -%}Asia Pacific{% endcomment -%}
+        {% when "id-id" -%}
+
+        {% when "ms-my" -%}
+
+        {% when "en-au" -%}
+
+        {% when "en-in" -%}
+
+        {% when "en-my" -%}
+
+        {% when "en-nz" -%}
+
+        {% when "en-sg" -%}
+
+        {% when "vi-vn" -%}
+
+        {% when "kk-kz" -%}
+
+        {% when "hi-in" -%}
+
+        {% when "th-th" -%}
+
+        {% when "ko-kr" -%}
+            {% case include.params.date_format -%}
+                {% when "none" -%}{% assign date_format = "" -%}
+                {% when "default" -%}{% assign date_format = "%Y. %-m. %-d" -%}
+                {% when "short" -%}{% assign date_format = "%y. %-m. %-d" -%}
+                {% when "medium" -%}{% assign date_format = "%Y. %-m. %-d" -%}
+                {% when "long" -%}{% assign date_format = "%Y년 %-m월 %-d일" -%}
+                {% when "full" -%}{% assign date_format = "%Y년 %-m월 %-d일 %A" -%}
+                {% else -%}{% assign date_format = include.params.date_format -%}
+            {% endcase -%}
+            {% case include.params.time_format -%}
+                {% when "none" -%}{% assign time_format = "" -%}
+                {% when "default" -%}{% assign time_format = "%p %-I:%M:%S" -%}
+                {% when "short" -%}{% assign time_format = "%p %-I:%M" -%}
+                {% when "medium" -%}{% assign time_format = "%p %-I:%M:%S" -%}
+                {% when "long" -%}{% assign time_format = "%p %-I시 %M분 %S초 %Z" -%}
+                {% when "full" -%}{% assign time_format = "%p %-I시 %M분 %S초 %Z" -%}
+                {% else -%}{% assign time_format = include.params.time_format -%}
+            {% endcase -%}
+            {% assign datetime_format = date_format | append: " " | append: time_format | strip -%}
+            {{ include.params.datetime | date: datetime_format | 
+                replace: "Sunday", "일요일" | replace: "Sun", "일" |
+                replace: "Monday", "월요일" | replace: "Mon", "월" | 
+                replace: "Tuesday", "화요일" | replace: "Tue", "화" |
+                replace: "Wednesday", "수요일" | replace: "Wed", "수" |
+                replace: "Thursday", "목요일" | replace: "Thu", "목" |
+                replace: "Friday", "금요일" | replace: "Fri", "금" |
+                replace: "Saturday", "토요일" | replace: "Sat", "토" |
+                replace: "January", "1월" | replace: "Jan", "1월" |
+                replace: "February", "2월" | replace: "Feb", "2월" |
+                replace: "March", "3월" | replace: "Mar", "3월" |
+                replace: "April", "4월" | replace: "Apr", "4월" |
+                replace: "May", "5월" | replace: "May", "5월" |
+                replace: "June", "6월" | replace: "Jun", "6월" |
+                replace: "July", "7월" | replace: "Jul", "7월" |
+                replace: "August", "8월" | replace: "Aug", "8월" |
+                replace: "September", "9월" | replace: "Sep", "9월" |
+                replace: "October", "10월" | replace: "Oct", "10월" |
+                replace: "November", "11월" | replace: "Nov", "11월" |
+                replace: "December", "12월" | replace: "Dec", "12월" |
+                replace: "AM", "오전" | replace: "PM", "오후" |
+                replace: "am", "오전" | replace: "pm", "오후" -}}
+
+        {% when "zh-tw" -%}
+            {% case include.params.date_format -%}
+                {% when "none" -%}{% assign date_format = "" -%}
+                {% when "default" -%}{% assign date_format = "%Y年%-m月%-d日" -%}
+                {% when "short" -%}{% assign date_format = "%Y/%-m/%-d" -%}
+                {% when "medium" -%}{% assign date_format = "%Y年%-m月%-d日" -%}
+                {% when "long" -%}{% assign date_format = "%Y年%-m月%-d日" -%}
+                {% when "full" -%}{% assign date_format = "%Y年%-m月%-d日 %A" -%}
+                {% else -%}{% assign date_format = include.params.date_format -%}
+            {% endcase -%}
+            {% case include.params.time_format -%}
+                {% when "none" -%}{% assign time_format = "" -%}
+                {% when "default" -%}{% assign time_format = "%p%-I:%M:%S" -%}
+                {% when "short" -%}{% assign time_format = "%p%-I:%M" -%}
+                {% when "medium" -%}{% assign time_format = "%p%-I:%M:%S" -%}
+                {% when "long" -%}{% assign time_format = "%p%-I:%M:%S [%Z]" -%}
+                {% when "full" -%}{% assign time_format = "%p%-I:%M:%S [%Z]" -%}
+                {% else -%}{% assign time_format = include.params.time_format -%}
+            {% endcase -%}
+            {% assign datetime_format = date_format | append: " " | append: time_format | strip -%}
+            {{ include.params.datetime | date: datetime_format | 
+                replace: "Sunday", "星期日" | replace: "Sun", "週日" |
+                replace: "Monday", "星期一" | replace: "Mon", "週一" | 
+                replace: "Tuesday", "星期二" | replace: "Tue", "週二" |
+                replace: "Wednesday", "星期三" | replace: "Wed", "週三" |
+                replace: "Thursday", "星期四" | replace: "Thu", "週四" |
+                replace: "Friday", "星期五" | replace: "Fri", "週五" |
+                replace: "Saturday", "星期六" | replace: "Sat", "週六" |
+                replace: "January", "1月" | replace: "Jan", "1月" |
+                replace: "February", "2月" | replace: "Feb", "2月" |
+                replace: "March", "3月" | replace: "Mar", "3月" |
+                replace: "April", "4月" | replace: "Apr", "4月" |
+                replace: "May", "5月" | replace: "May", "5月" |
+                replace: "June", "6月" | replace: "Jun", "6月" |
+                replace: "July", "7月" | replace: "Jul", "7月" |
+                replace: "August", "8月" | replace: "Aug", "8月" |
+                replace: "September", "9月" | replace: "Sep", "9月" |
+                replace: "October", "10月" | replace: "Oct", "10月" |
+                replace: "November", "11月" | replace: "Nov", "11月" |
+                replace: "December", "12月" | replace: "Dec", "12月" |
+                replace: "AM", "上午" | replace: "PM", "下午" |
+                replace: "am", "上午" | replace: "pm", "下午" -}}
+
+        {% when "zh-cn" -%}
+            {% case include.params.date_format -%}
+                {% when "none" -%}{% assign date_format = "" -%}
+                {% when "default" -%}{% assign date_format = "%Y年%-m月%-d日" -%}
+                {% when "short" -%}{% assign date_format = "%Y/%-m/%-d" -%}
+                {% when "medium" -%}{% assign date_format = "%Y年%-m月%-d日" -%}
+                {% when "long" -%}{% assign date_format = "%Y年%-m月%-d日" -%}
+                {% when "full" -%}{% assign date_format = "%Y年%-m月%-d日%A" -%}
+                {% else -%}{% assign date_format = include.params.date_format -%}
+            {% endcase -%}
+            {% case include.params.time_format -%}
+                {% when "none" -%}{% assign time_format = "" -%}
+                {% when "default" -%}{% assign time_format = "%p%-I:%M:%S" -%}
+                {% when "short" -%}{% assign time_format = "%p%-I:%M" -%}
+                {% when "medium" -%}{% assign time_format = "%p%-I:%M:%S" -%}
+                {% when "long" -%}{% assign time_format = "%Z %p%-I:%M:%S" -%}
+                {% when "full" -%}{% assign time_format = "%Z %p%-I:%M:%S" -%}
+                {% else -%}{% assign time_format = include.params.time_format -%}
+            {% endcase -%}
+            {% assign datetime_format = date_format | append: " " | append: time_format | strip -%}
+            {{ include.params.datetime | date: datetime_format | 
+                replace: "Sunday", "星期日" | replace: "Sun", "周日" |
+                replace: "Monday", "星期一" | replace: "Mon", "周一" | 
+                replace: "Tuesday", "星期二" | replace: "Tue", "周二" |
+                replace: "Wednesday", "星期三" | replace: "Wed", "周三" |
+                replace: "Thursday", "星期四" | replace: "Thu", "周四" |
+                replace: "Friday", "星期五" | replace: "Fri", "周五" |
+                replace: "Saturday", "星期六" | replace: "Sat", "周六" |
+                replace: "January", "一月" | replace: "Jan", "1月" |
+                replace: "February", "二月" | replace: "Feb", "2月" |
+                replace: "March", "三月" | replace: "Mar", "3月" |
+                replace: "April", "四月" | replace: "Apr", "4月" |
+                replace: "May", "五月" | replace: "May", "5月" |
+                replace: "June", "六月" | replace: "Jun", "6月" |
+                replace: "July", "七月" | replace: "Jul", "7月" |
+                replace: "August", "八月" | replace: "Aug", "8月" |
+                replace: "September", "九月" | replace: "Sep", "9月" |
+                replace: "October", "十月" | replace: "Oct", "10月" |
+                replace: "November", "十一月" | replace: "Nov", "11月" |
+                replace: "December", "十二月" | replace: "Dec", "12月" |
+                replace: "AM", "上午" | replace: "PM", "下午" |
+                replace: "am", "上午" | replace: "pm", "下午" -}}
+
+        {% when "zh-hk" -%}
+            {% case include.params.date_format -%}
+                {% when "none" -%}{% assign date_format = "" -%}
+                {% when "default" -%}{% assign date_format = "%Y年%-m月%-d日" -%}
+                {% when "short" -%}{% assign date_format = "%-d/%-m/%Y" -%}
+                {% when "medium" -%}{% assign date_format = "%Y年%-m月%-d日" -%}
+                {% when "long" -%}{% assign date_format = "%Y年%-m月%-d日" -%}
+                {% when "full" -%}{% assign date_format = "%Y年%-m月%-d日%A" -%}
+                {% else -%}{% assign date_format = include.params.date_format -%}
+            {% endcase -%}
+            {% case include.params.time_format -%}
+                {% when "none" -%}{% assign time_format = "" -%}
+                {% when "default" -%}{% assign time_format = "%p%-I:%M:%S" -%}
+                {% when "short" -%}{% assign time_format = "%p%-I:%M" -%}
+                {% when "medium" -%}{% assign time_format = "%p%-I:%M:%S" -%}
+                {% when "long" -%}{% assign time_format = "%p%-I:%M:%S [%Z]" -%}
+                {% when "full" -%}{% assign time_format = "%p%-I:%M:%S [%Z]" -%}
+                {% else -%}{% assign time_format = include.params.time_format -%}
+            {% endcase -%}
+            {% assign datetime_format = date_format | append: " " | append: time_format | strip -%}
+            {{ include.params.datetime | date: datetime_format | 
+                replace: "Sunday", "星期日" | replace: "Sun", "週日" |
+                replace: "Monday", "星期一" | replace: "Mon", "週一" | 
+                replace: "Tuesday", "星期二" | replace: "Tue", "週二" |
+                replace: "Wednesday", "星期三" | replace: "Wed", "週三" |
+                replace: "Thursday", "星期四" | replace: "Thu", "週四" |
+                replace: "Friday", "星期五" | replace: "Fri", "週五" |
+                replace: "Saturday", "星期六" | replace: "Sat", "週六" |
+                replace: "January", "1月" | replace: "Jan", "1月" |
+                replace: "February", "2月" | replace: "Feb", "2月" |
+                replace: "March", "3月" | replace: "Mar", "3月" |
+                replace: "April", "4月" | replace: "Apr", "4月" |
+                replace: "May", "5月" | replace: "May", "5月" |
+                replace: "June", "6月" | replace: "Jun", "6月" |
+                replace: "July", "7月" | replace: "Jul", "7月" |
+                replace: "August", "8月" | replace: "Aug", "8月" |
+                replace: "September", "9月" | replace: "Sep", "9月" |
+                replace: "October", "10月" | replace: "Oct", "10月" |
+                replace: "November", "11月" | replace: "Nov", "11月" |
+                replace: "December", "12月" | replace: "Dec", "12月" |
+                replace: "AM", "上午" | replace: "PM", "下午" |
+                replace: "am", "上午" | replace: "pm", "下午" -}}
+
+        {% when "ja-jp" -%}
+            {% case include.params.date_format -%}
+                {% when "none" -%}{% assign date_format = "" -%}
+                {% when "default" -%}{% assign date_format = "%Y/%m/%d" -%}
+                {% when "short" -%}{% assign date_format = "%Y/%m/%d" -%}
+                {% when "medium" -%}{% assign date_format = "%Y/%m/%d" -%}
+                {% when "long" -%}{% assign date_format = "%Y年%-m月%-d日" -%}
+                {% when "full" -%}{% assign date_format = "%Y年%-m月%-d日%A" -%}
+                {% else -%}{% assign date_format = include.params.date_format -%}
+            {% endcase -%}
+            {% case include.params.time_format -%}
+                {% when "none" -%}{% assign time_format = "" -%}
+                {% when "default" -%}{% assign time_format = "%-H:%M:%S" -%}
+                {% when "short" -%}{% assign time_format = "%-H:%M" -%}
+                {% when "medium" -%}{% assign time_format = "%-H:%M:%S" -%}
+                {% when "long" -%}{% assign time_format = "%-H:%M:%S %Z" -%}
+                {% when "full" -%}{% assign time_format = "%-H時%M分%S秒 %Z" -%}
+                {% else -%}{% assign time_format = include.params.time_format -%}
+            {% endcase -%}
+            {% assign datetime_format = date_format | append: " " | append: time_format | strip -%}
+            {{ include.params.datetime | date: datetime_format | 
+                replace: "Sunday", "日曜日" | replace: "Sun", "日" |
+                replace: "Monday", "月曜日" | replace: "Mon", "月" | 
+                replace: "Tuesday", "火曜日" | replace: "Tue", "火" |
+                replace: "Wednesday", "水曜日" | replace: "Wed", "水" |
+                replace: "Thursday", "木曜日" | replace: "Thu", "木" |
+                replace: "Friday", "金曜日" | replace: "Fri", "金" |
+                replace: "Saturday", "土曜日" | replace: "Sat", "土" |
+                replace: "January", "1月" | replace: "Jan", "1月" |
+                replace: "February", "2月" | replace: "Feb", "2月" |
+                replace: "March", "3月" | replace: "Mar", "3月" |
+                replace: "April", "4月" | replace: "Apr", "4月" |
+                replace: "May", "5月" | replace: "May", "5月" |
+                replace: "June", "6月" | replace: "Jun", "6月" |
+                replace: "July", "7月" | replace: "Jul", "7月" |
+                replace: "August", "8月" | replace: "Aug", "8月" |
+                replace: "September", "9月" | replace: "Sep", "9月" |
+                replace: "October", "10月" | replace: "Oct", "10月" |
+                replace: "November", "11月" | replace: "Nov", "11月" |
+                replace: "December", "12月" | replace: "Dec", "12月" -}}
+
+        {% comment -%}No locale or unsupported locales{% endcomment -%}
+        {% else -%}
+            {% case include.params.date_format -%}
+                {% when "none" -%}{% assign date_format = "" -%}
+                {% when "default" -%}{% assign date_format = "%Y-%m-%d" -%}
+                {% when "short" -%}{% assign date_format = "%Y-%m-%d" -%}
+                {% when "medium" -%}{% assign date_format = "%Y-%m-%d" -%}
+                {% when "long" -%}{% assign date_format = "%Y-%m-%d" -%}
+                {% when "full" -%}{% assign date_format = "%Y-%m-%d" -%}
+                {% else -%}{% assign date_format = include.params.date_format -%}
+            {% endcase -%}
+            {% case include.params.time_format -%}
+                {% when "none" -%}{% assign time_format = "" -%}
+                {% when "default" -%}{% assign time_format = "%H:%M:%S" -%}
+                {% when "short" -%}{% assign time_format = "%H:%M:%S" -%}
+                {% when "medium" -%}{% assign time_format = "%H:%M:%S" -%}
+                {% when "long" -%}{% assign time_format = "%H:%M:%S" -%}
+                {% when "full" -%}{% assign time_format = "%H:%M:%S" -%}
+                {% else -%}{% assign time_format = include.params.time_format -%}
+            {% endcase -%}
+            {% assign datetime_format = date_format | append: " " | append: time_format | strip -%}
+            {{ include.params.datetime | date: datetime_format -}}
+
+    {% endcase -%}
+{% endif -%}

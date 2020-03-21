@@ -1,0 +1,18 @@
+{% comment -%}---------------------------------------------------------------------------
+Always have {% include dynamo file="_includes/foot.html" mode="inclusive" %} just before 
+the closing </body> tag of your layout.  You generally use this partial to reference 
+JavaScript files.
+------------------------------------------------------------------------{% endcomment -%}
+
+<script type='text/javascript'>
+    /* <![CDATA[ */
+    var twentyseventeenScreenReaderText = {"quote":"<svg class=\"icon icon-quote-right\" aria-hidden=\"true\" role=\"img\"> <use href=\"#icon-quote-right\" xlink:href=\"#icon-quote-right\"><\/use> <\/svg>","expand":"Expand child menu","collapse":"Collapse child menu","icon":"<svg class=\"icon icon-angle-down\" aria-hidden=\"true\" role=\"img\"> <use href=\"#icon-angle-down\" xlink:href=\"#icon-angle-down\"><\/use> <span class=\"svg-fallback icon-angle-down\"><\/span><\/svg>"};
+    /* ]]> */
+</script>
+<script src="{{ THEME_DIRECTORY_URL }}/js/skip-link-focus-fix.js?ver=1.0"></script>
+<script src="{{ THEME_DIRECTORY_URL }}/js/navigation.js?ver=1.0"></script>
+<script src="{{ THEME_DIRECTORY_URL }}/js/global.js?ver=1.0"></script>
+<script src="{{ THEME_DIRECTORY_URL }}/js/jquery.scrollTo.js?ver=2.1.2"></script>
+{% include dynamo function="enable_smooth_anchor" top_offset_selector=".navigation-top" additional_top_offset=20 smooth_scroll_duration=800 %}
+{% include dynamo function="enqueue_script" for="search" %}
+{% include dynamo file="images/svg-icons.svg" from="theme" %}

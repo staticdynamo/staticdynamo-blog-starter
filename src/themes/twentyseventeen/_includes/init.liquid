@@ -1,0 +1,8 @@
+{% assign THEME_SUPPORTED_LOCALES = EMPTY_ARRAY | push: "en-us" | push: "zh-cn" -%}
+
+{% include dynamo function="get_config" of="theme" key="optimization" -%}
+{% assign THEME_OPTIMIZATION = config -%}
+{% case THEME_OPTIMIZATION -%}
+    {% when "small-site" -%}{% assign THEME_USE_WEB_COMPONENT = false -%}
+    {% when "large-site" -%}{% assign THEME_USE_WEB_COMPONENT = true -%}
+{% endcase -%}

@@ -1,0 +1,25 @@
+{% comment -%}---------------------------------------------------------------------------
+Function: extract_shortcode_att
+
+------------------------------------------------------------------------{% endcomment -%}
+
+{% if include.params.attribute -%}
+    {% if include.params.attributes contains include.params.attribute -%}
+        {% capture att_start -%}{{ include.params.attribute }}="{%- endcapture -%}
+        {% capture att_end -%}"{%- endcapture -%}
+        {% assign parts = include.params.attributes | split: att_start -%}
+        {% for part in parts | offset: 1 -%}
+            {% if part contains att_end -%}
+                {% if att_value != blank -%}
+                    {% assign att_value = att_value | append: " " -%}
+                {% endif -%}
+                {% assign value = part | split: att_end | first -%}
+                {% assign att_value = att_value | append: value -%}
+            {% endif -%}
+        {% endfor -%}
+        {{ att_value }}
+        {% assign att_value = blank -%}
+    {% elsif include.params.default -%}
+        {{ include.params.default }}
+    {% endif -%}
+{% endif -%}

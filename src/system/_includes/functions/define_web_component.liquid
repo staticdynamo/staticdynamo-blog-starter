@@ -1,0 +1,49 @@
+{% comment -%}---------------------------------------------------------------------------
+Function: define_web_component
+
+Description: Define a web component
+
+Parameters:
+    * name              (string) - Name of the custom element.  Note that custom element
+                                   names require a dash to be used in them, e.g.
+                                   'word-count'.  They cannot be single words.
+    * html              (string) -
+        * html_file
+        * from
+    * use_shadow_dom    (string) - When this parameter is true, it will define a custom
+                                   element that uses Shadow DOM.  Shadow DOM provides a
+                                   way for an element to own, render, and style a chunk
+                                   of DOM that's separate from the rest of the page.
+                                   Default: false
+
+------------------------------------------------------------------------{% endcomment -%}
+
+{% if include.params.name and include.params.name contains '-' -%}
+    {% comment -%}Get content from html_file if the html parameter is empty{% endcomment -%}
+    {% if include.params.html -%}
+        {% assign html = include.params.html | -%}
+    {% elsif include.params.html_file -%}
+        {% capture html -%}{% include dynamo file=include.params.html_file from=include.params.from %}{%- endcapture -%}
+    {% else -%}
+        {% assign html = "" -%}
+    {% endif -%}
+    {% assign html_in_js = html | replace: '`', '\`' -%}
+
+customElements.define('{{ include.params.name }}',
+    class extends HTMLElement {
+        {% if include.params.use_shadow_dom == true -%}
+        constructor() {
+            super();
+            let tmpl = document.createElement('template');
+            tmpl.innerHTML = `{{ html_in_js }}`;
+            let shadowRoot = this.attachShadow({mode: 'open'});
+            shadowRoot.appendChild(tmpl.content.cloneNode(true));
+        }
+        {% else -%}
+        connectedCallback() {
+            $(this).html(`{{ html_in_js }}`);
+        }
+        {%- endif %}
+    }
+);
+{% endif -%}

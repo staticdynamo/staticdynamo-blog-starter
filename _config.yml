@@ -1,0 +1,330 @@
+#----------------------------------------------------------------------------------
+# Site Settings
+#----------------------------------------------------------------------------------
+
+# Title of your site
+title: StaticDynamo Site
+
+# Short bio or description
+description: "Just another StaticDynamo site"
+
+# Site logo image such as corporate symbol
+logo: /assets/images/logo.png
+
+# Your website URL (e.g. https://<username>.github.io)
+# Used for sitemap.xml and your RSS feed
+url: 
+
+repository: 
+
+# If you're hosting your site at a Project repository on GitHub pages
+# (http://yourusername.github.io/repository-name)
+# and NOT your User repository (http://yourusername.github.io)
+# then add in the baseurl here, like this: "/repository-name"
+baseurl: 
+
+# The site locale e.g. en-us
+locale: en-us
+
+# The site charset e.g. utf-8
+charset: utf-8
+
+# Discourage search engines to index the site
+noindex: false
+
+# Link to the favicon (Default: "/favicon.ico")
+favicon:
+
+# Link to the privacy policy
+privacy_policy_link:
+
+timezone: UTC
+
+
+#----------------------------------------------------------------------------------
+# Theme Settings
+#----------------------------------------------------------------------------------
+themes:
+  # The active theme must exist in the src/themes folder.
+  active: twentyseventeen
+
+
+#----------------------------------------------------------------------------------
+# Post Settings
+#----------------------------------------------------------------------------------
+
+# The permalink of posts
+# For multilingual site, /:path/ is the only global permalink setting that works.
+# Other permalink settings cannot prepend the post locale to the URL.
+permalink: /:year/:month/:day/:title/
+
+# Default settings of posts
+default_post_settings: &default_post_settings
+  layout: post
+  permalink: /web/:categories/:year/:month/:day/:title/
+  deleted: false
+  has_sidebar: true
+  read_time: true
+  share: true
+  related: true
+  comments:
+    enabled: true
+
+pagination:
+  page_size: 20
+
+#----------------------------------------------------------------------------------
+# Page Settings
+#----------------------------------------------------------------------------------
+
+# Default settings of pages
+default_page_settings: &default_page_settings
+  layout: page
+  permalink: /:path/
+  has_sidebar: false
+  comments:
+    enabled: false
+
+page_templates:
+  home:
+  search:
+  404:
+
+#----------------------------------------------------------------------------------
+# Taxonomy Settings
+#----------------------------------------------------------------------------------
+
+# You can overwrite the default taxonomy settings in individual taxonomy settings
+default_taxonomy_settings: &default_taxonomy_settings
+  layout: archive
+  permalink: /:path/
+  has_sidebar: true
+  comments:
+    enabled: false
+
+taxonomies:
+  category:
+    name: Category
+    settings: &category_settings
+      taxonomy: category
+      archive:
+        taxonomy_field: categories
+        taxonomy_query: item.categories contains page.name
+        post_collection: # Default: posts
+        where_exp: # Default: nil
+        order_by: # Default: date
+        order: # Default: DESC
+
+  tag:
+    name: Tag
+    settings: &tag_settings
+      taxonomy: tag
+      archive:
+        taxonomy_field: tags
+        taxonomy_query: item.tags contains page.name
+        post_collection: # Default: posts
+        where_exp: # Default: nil
+        order_by: # Default: date
+        order: # Default DESC
+
+
+#----------------------------------------------------------------------------------
+# Shortcodes
+#----------------------------------------------------------------------------------
+shortcodes:
+  if:
+    enabled: false
+    settings:
+  youtube:
+    enabled: false
+    settings:
+  tradingview:
+    enabled: false
+    settings:
+  note:
+    enabled: false
+    settings:
+  tabs:
+    enabled: false
+    settings:
+  accordion:
+    enabled: false
+    settings:
+  codepen:
+    enabled: false
+    settings:
+
+
+#----------------------------------------------------------------------------------
+# Analytics
+#----------------------------------------------------------------------------------
+analytics:
+  google:
+    enabled: true
+    settings:
+      tracking_id: 
+
+
+#----------------------------------------------------------------------------------
+# Comments
+#----------------------------------------------------------------------------------
+comments:
+  disqus:
+    enabled: false
+    settings:
+      shortname:
+  discourse:
+    enabled: false
+    settings:
+      server:
+  facebook:
+    enabled: false
+    settings:
+      appid:
+      num_of_posts:
+      colorscheme:
+
+
+#----------------------------------------------------------------------------------
+# Search
+#----------------------------------------------------------------------------------
+search:
+  lunr:
+    enabled: false
+    settings:
+      search_field_selector:              # Default: input.search_field
+      search_result_container_selector:   # Default: auto-calculated based on search_field
+      num_of_search_results:              # Default: 5
+      highlight_search_terms:             # Default: false
+
+
+#----------------------------------------------------------------------------------
+# SEO
+#----------------------------------------------------------------------------------
+seo:
+  opengraph:
+    enabled: true
+  twitter:
+    enabled: true
+
+
+#----------------------------------------------------------------------------------
+# Site Verification
+#----------------------------------------------------------------------------------
+site_verification:
+  google:
+    enabled: false
+    settings:
+      verification_code:
+  bing:
+    enabled: false
+    settings:
+      verification_code:
+  pinterest:
+    enabled: false
+    settings:
+      verification_code:
+  yandex:
+    enabled: false
+    settings:
+      verification_code:
+
+
+#----------------------------------------------------------------------------------
+# Custom Settings
+#----------------------------------------------------------------------------------
+
+
+
+
+#----------------------------------------------------------------------------------
+# System Settings
+# DO NOT CHANGE if you do not know what you are doing
+#----------------------------------------------------------------------------------
+
+collections:
+  terms:
+    output: true
+  posts:
+    output: true
+  pages:
+    output: true
+
+defaults:
+  # _posts
+  - scope:
+      path: ""
+      type: posts
+    values:
+      <<: *default_post_settings
+  # _pages
+  - scope:
+      path: "_pages"
+      type: pages
+    values:
+      <<: *default_page_settings
+  # _terms
+  - scope:
+      path: ""
+      type: terms
+    values:
+      <<: *default_taxonomy_settings
+  # categories
+  - scope:
+      path: _terms/categories
+      type: terms
+    values:
+      <<: *category_settings
+  # tags
+  - scope:
+      path: _terms/tags
+      type: terms
+    values:
+      <<: *tag_settings
+
+# Compress HTML in Jekyll
+# http://jch.penibelst.de/
+compress_html:
+  clippings: []
+  comments: []
+  ignore:
+    envs: [development, production]
+  blanklines: false
+  profile: false
+  startings: []
+  endings: []
+
+theme:
+
+# Use the following Jekyll plug-ins
+plugins:
+  - jekyll-redirect-from
+  - jekyll-relative-links # Convert relative links to md files to their rendered equivalents
+  - jekyll-sitemap # Create a sitemap using the official Jekyll sitemap gem
+  - jemoji # Enable Emoji
+
+relative_links:
+  enabled: true
+  collections: true
+
+include:
+  - .htaccess
+
+# Exclude these files from your production _site
+exclude:
+  - "src/dynamo"
+  - CNAME
+  - README.md
+  - Gemfile
+  - Gemfile.lock
+  - .cache
+  - .sass-cache
+
+incremental: false
+
+sass:
+  sass_dir: ./src
+  style: compressed
+
+includes_dir: ./src
+layouts_dir: ./src/system/_layouts

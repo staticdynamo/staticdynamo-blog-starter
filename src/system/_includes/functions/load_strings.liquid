@@ -1,0 +1,54 @@
+{% comment -%}---------------------------------------------------------------------------
+Function: load_strings
+
+Description: Load strings that best match the requested locale from system, theme, and 
+    custom.  
+
+Parameters:
+    * locale                    (string) - Locale to load the strings.  If the parameter 
+                                           is not provided, it defaults to the current 
+                                           page locale (page.locale).  If the current page 
+                                           locale is also not specified, it uses the site 
+                                           locale (site.locale). If the site locale is 
+                                           not configured either, it defaults to 'en-us'.
+
+Usage: {% include dynamo function="load_strings" locale=page.locale -%}
+------------------------------------------------------------------------{% endcomment -%}
+
+{% assign locale = include.params.locale | default: CURRENT_LOCALE | downcase -%}
+
+{% comment -%}Load system strings{% endcomment -%}
+{% unless SYSTEM_SUPPORTED_LOCALES -%}
+    {% assign SYSTEM_SUPPORTED_LOCALES = EMPTY_ARRAY |
+        push: "en-us" | push: "en-ca" | push: "es-mx" | push: "fr-ca" | push: "nl-nl" | push: "pt-br" |
+        push: "bs-cyrl-ba" | push: "bs-latn-ba" | push: "ca-es" | push: "cs-cz" | push: "da-dk" |
+        push: "de-at" | push: "de-ch" | push: "de-de" | push: "et-ee" | push: "en-ie" | push: "en-za" |
+        push: "en-gb" | push: "es-es" | push: "eu-es" | push: "fr-be" | push: "fr-ch" | push: "fr-fr" |
+        push: "gl-es" | push: "hr-hr" | push: "is-is" | push: "it-ch" | push: "it-it" | push: "lv-lv" |
+        push: "lt-lt" | push: "hu-hu" | push: "nl-be" | push: "nl-nl" | push: "nb-no" | push: "pl-pl" |
+        push: "pt-pt" | push: "ro-ro" | push: "sk-sk" | push: "sl-si" | push: "sr-latn-rs" |
+        push: "fi-fi" | push: "sv-se" | push: "tr-tr" | push: "el-gr" | push: "bg-bg" | push: "ru-ru" |
+        push: "sr-cyrl-rs" | push: "uk-ua" | push: "he-il" | push: "ar-sa" | push: "id-id" |
+        push: "ms-my" | push: "en-au" | push: "en-in" | push: "en-my" | push: "en-nz" | push: "en-sg" |
+        push: "vi-vn" | push: "kk-kz" | push: "hi-in" | push: "th-th" | push: "ko-kr" | push: "zh-tw" |
+        push: "zh-cn" | push: "zh-hk" | push: "ja-jp" -%}
+{% endunless -%}
+{% if SYSTEM_SUPPORTED_LOCALES contains locale -%}
+    {% assign system_locale_to_load = locale -%}
+{% else -%}
+    {% assign system_locale_to_load = SYSTEM_SUPPORTED_LOCALES[0] -%}
+{% endif -%}
+{% include system/_includes/strings/{{ system_locale_to_load }}.liquid -%}
+
+{% comment -%}Load theme strings{% endcomment -%}
+{% if THEME_SUPPORTED_LOCALES and THEME_SUPPORTED_LOCALES != empty -%}
+    {% if THEME_SUPPORTED_LOCALES contains locale -%}
+        {% assign theme_locale_to_load = locale -%}
+    {% else -%}
+        {% assign theme_locale_to_load = THEME_SUPPORTED_LOCALES[0] -%}
+    {% endif -%}
+    {% include themes/{{ site.themes.active }}/_includes/strings/{{ theme_locale_to_load }}.liquid -%}
+{% endif -%}
+
+{% comment -%}Load custom strings{% endcomment -%}
+{% include custom/_includes/strings.liquid locale=locale -%}

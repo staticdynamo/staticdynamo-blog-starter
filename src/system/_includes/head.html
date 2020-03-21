@@ -1,0 +1,26 @@
+{% comment -%}---------------------------------------------------------------------------
+Always have {% include dynamo file="_includes/head.html" mode="inclusive" -%} at the 
+beginning of the <head> tag of your layout.  You generally use this partial to add 
+elements to <head> such as styles, scripts, and meta tags.
+------------------------------------------------------------------------{% endcomment -%}
+
+<!-- page generated at {{ site.time }} -->
+<!-- begin system head -->
+<title>{% if page.layout != "home" -%}{{ page.name | default: page.title }} - {% endif -%}{{ SITE_TITLE }}</title>
+<meta charset='{{ site.charset | default: " utf-8 " }}'>
+<meta property="description" content='{{ page.excerpt | default: SITE_DESCRIPTION | strip_html | normalize_whitespace | strip }}' />
+{% if site.noindex -%}<meta name='robots' content='noindex,follow' />{% endif -%}
+<link rel="alternate" type="application/atom+xml" title="{{ SITE_TITLE }}" href='{{ "/feed.xml" | relative_url }}' />
+{% if page.previous.url -%}
+<link rel='prev' title='{{ page.previous.title }}' href='{{ page.previous.url }}' />
+{% endif -%}
+{% if page.next.url -%}
+<link rel='next' title='{{ page.next.title }}' href='{{ page.next.url }}' />
+{% endif -%}
+<script>var currentPageUrl = '{{ page.url | downcase }}';</script>
+<meta name="generator" content="dynamo" />
+{% include dynamo function="enqueue_script" for="jquery" %}
+{% include dynamo function="enqueue_script" for="dynamo" %}
+{% include dynamo function="enqueue_meta_tag" for="favicon" %}
+{% include dynamo function="enqueue_meta_tag" for="seo" %}
+<!-- end system head -->

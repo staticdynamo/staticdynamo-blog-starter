@@ -1,0 +1,27 @@
+{% comment -%}---------------------------------------------------------------------------
+This file allows theme creators to offer theme-specific functions or overwrite any of the 
+system functions.  The function parameters can be accessed through include.params object.
+------------------------------------------------------------------------{% endcomment -%}
+
+{% case include.function -%}
+
+
+{% comment -%}---------------------------------------------------------------------------
+Function: render_post_in_post_list
+
+Description: Filter the default display of a post in the 'render_posts' function call.
+
+Parameters:
+    * post          (object) - The post object
+------------------------------------------------------------------------{% endcomment -%}
+{% when "render_post_in_post_list" -%}
+<article class="post">
+    <small>
+        {% include dynamo function="render_datetime" datetime=post.date locale=page.locale date_format="default" -%}
+    </small>
+    <h3><a href="{{ include.params.post.url | relative_url }}">{{ include.params.post.title }}</a></h3>
+</article>
+
+
+{%- else -%}<N/A>
+{%- endcase -%}

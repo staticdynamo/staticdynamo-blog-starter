@@ -1,0 +1,10 @@
+{% if include.params.attributes and include.params.content -%}
+    {% capture condition -%}
+        {% include dynamo function="extract_shortcode_att" attribute="condition" attributes=include.params.attributes %}
+    {%- endcapture -%}
+    {% assign content_id = "content-" | append: UNIQUE_ID -%}
+<div id="{{ content_id }}" style="display: none">
+    {% include dynamo function="render_content" content=include.params.content indent_level=1 %}
+</div>
+<script>$('#{{ content_id }}').css("display", ({{ condition }}) ? "contents" : "none");</script>
+{% endif -%}

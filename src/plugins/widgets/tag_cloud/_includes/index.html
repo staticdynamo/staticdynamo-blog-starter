@@ -1,0 +1,34 @@
+{% comment -%}---------------------------------------------------------------------------
+Widget: Tag Cloud
+The widget title is not displayed is the tag cloud is empty.
+------------------------------------------------------------------------{% endcomment -%}
+
+{% comment -%}Extract settings from include.params.settings{% endcomment -%}
+{% assign hide_empty = include.params.settings.hide_empty | default: false -%}
+{% assign smallest = include.params.settings.smallest | default: 8 -%}
+{% assign largest = include.params.settings.largest | default: 22 -%}
+{% assign unit = include.params.settings.unit | default: "pt" -%}
+{% assign num_of_tags = include.params.settings.num_of_tags | default: 45 -%}
+{% assign show_size = include.params.settings.show_size | default: true -%}
+{% assign format = include.params.settings.format | default: "list" -%}
+{% assign container_class = include.params.settings.container_class | default: "tag-cloud" -%}
+{% assign list_item_class = include.params.settings.list_item_class | default: "tag-item" -%}
+{% assign separator = include.params.settings.separator | default: " " -%}
+{% assign widget_tag_cloud_unique_id = UNIQUE_ID | prepend: "tag_cloud-" -%}
+<section id="{{ widget_tag_cloud_unique_id }}" class="widget widget_tag_cloud">
+    <h2 class="widget-title">{{ include.params.settings.title | default: STRING__TAGS }}</h2>
+    <div class="tagcloud">
+        {% include dynamo function="render_tag_cloud" 
+            hide_empty=hide_empty
+            smallest=smallest 
+            largest=largest
+            unit=unit
+            num_of_tags=num_of_tags
+            show_size=show_size
+            format=format 
+            container_class=container_class 
+            list_item_class=list_item_class
+            separator=separator
+            indent_level=2 %}
+    </div>
+</section>

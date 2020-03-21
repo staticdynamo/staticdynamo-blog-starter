@@ -1,0 +1,17 @@
+{% if include.params.attributes -%}
+    {% capture src -%}{% include dynamo function="extract_shortcode_att" attribute="src" attributes=include.params.attributes %}{%- endcapture -%}
+    {% capture width -%}{% include dynamo function="extract_shortcode_att" default="100%" attribute="width" attributes=include.params.attributes %}{%- endcapture -%}
+    {% capture height -%}{% include dynamo function="extract_shortcode_att" default="0" attribute="height" attributes=include.params.attributes %}{%- endcapture -%}
+    {% capture allow -%}{% include dynamo function="extract_shortcode_att" attribute="allow" attributes=include.params.attributes %}{%- endcapture -%}
+    {% capture frameborder -%}{% include dynamo function="extract_shortcode_att" default="0" attribute="frameborder" attributes=include.params.attributes %}{%- endcapture -%}
+    {% capture allowfullscreen -%}{% include dynamo function="extract_shortcode_att" default="true" attribute="allowfullscreen" attributes=include.params.attributes %}{%- endcapture -%}
+
+    {% if src -%}
+<div style="position: relative; width: {{ width }}; height: {{ height }}; padding-bottom: 56%;">
+    <iframe src="{{ src }}" style="position: absolute; width: 100%; height: 100%; left: 0; top: 0;" frameborder="{{ frameborder }}" 
+        {% if allow != blank %} allow="{{ allow }}"{% endif -%}
+        {% if allowfullscreen != blank %} allowfullscreen="{{allowfullscreen}}"{% endif -%}>
+    </iframe>
+</div>
+    {%- endif -%}
+{% endif -%}

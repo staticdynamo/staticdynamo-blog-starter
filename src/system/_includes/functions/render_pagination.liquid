@@ -1,0 +1,101 @@
+{% comment -%}---------------------------------------------------------------------------
+Function: render_pagination
+
+Description: Outputs a set of page numbers with links to the previous and next pages of 
+    posts.
+
+Parameters:
+    * show_prev_next_links      (bool)   - Whether to include the previous and next links 
+                                           in the list or not.  Default: true
+    * prev_page_text            (string) - The previous page text. Works only if 
+                                           'show_prev_next_links' argument is set to true.
+    * next_page_text            (string) - The next page text. Works only if 
+                                           'show_prev_next_links' argument is set to true.
+    * first_page_url            (string) - URL of the first page in pagination if it is 
+                                           not the relative URL of "/".
+    * before_page_number        (string) - A string to appear before the page number.
+    * after_page_number         (string) - A string to append after the page number.
+    * mid_size                  (int)    - How many numbers to either side of current 
+                                           page, but not including current page. 
+                                           Default: 2
+    * end_size                  (int)    - How many numbers on either the start and the 
+                                           end list edges. Default: 1
+
+------------------------------------------------------------------------{% endcomment -%}
+
+{% if paginator.total_pages > 1 -%}
+<nav class="navigation pagination" role="navigation">
+    <h2 class="screen-reader-text">Posts navigation</h2>
+    <div class="nav-links">
+        {% if include.params.first_page_url -%}
+            {% assign first_page_url = include.params.first_page_url -%}
+        {% else -%}
+            {% assign first_page_url = "/" | relative_url -%}
+        {% endif -%}
+
+        {% comment -%}Link for previous page{% endcomment -%}
+        {% if paginator.previous_page -%}
+            {% if paginator.previous_page == 1 -%}
+        <a class="prev page-numbers" href="{{ first_page_url }}">
+            {{ include.params.prev_page_text | default: STRING__DEFAULT_PAGINATION_PREV_PAGE_TEXT }}
+        </a>
+            {%- else -%}
+        <a class="prev page-numbers" href="{{ site.paginate_path | replace: ':num', paginator.previous_page | replace: '//', '/' | relative_url }}">
+            {{ include.params.prev_page_text | default: STRING__DEFAULT_PAGINATION_PREV_PAGE_TEXT }}
+        </a>
+            {%- endif %}
+        {% endif -%}
+
+        {% assign dots = false -%}
+        {% assign end_size = include.params.end_size | default: 1 -%}
+        {% if end_size < 1 -%}{% assign end_size = 1 -%}{% endif -%}
+        {% assign mid_size = include.params.mid_size | default: 2 -%}
+        {% if mid_size < 0 -%}{% assign mid_size = 2 -%}{% endif -%}
+
+        {% for index in (1..paginator.total_pages) -%}
+        
+        {% if index == paginator.page -%}
+            {% assign dots = true -%}
+        <span aria-current="page" class="page-numbers current">
+            {{ include.params.before_page_number }}{{ index }}{{ include.params.after_page_number }}
+        </span>
+        {% else -%}
+            {% assign show_index = false -%}
+            {% assign begin_upper_bound = end_size -%}
+            {% assign current_lower_bound = paginator.page | minus: mid_size -%}
+            {% assign current_upper_bound = paginator.page | plus: mid_size -%}
+            {% assign end_lower_bound = paginator.total_pages | minus: end_size -%}
+            {% if index <= begin_upper_bound -%}
+                {% assign show_index = true -%}
+            {% elsif index >= current_lower_bound and index <= current_upper_bound -%}
+                {% assign show_index = true -%}
+            {% elsif index > end_lower_bound -%}
+                {% assign show_index = true -%}
+            {% endif -%}
+    
+            {% if include.params.show_all == true or show_index -%}
+                {% assign dots = true -%}
+                {% if index == 1 -%}
+        <a class="page-numbers" href="{{ first_page_url }}">
+                {%- else -%}
+        <a class="page-numbers" href="{{ site.paginate_path | replace: ':num', index | relative_url }}">
+                {%- endif %}
+            {{ include.params.before_page_number }}{{ index }}{{ include.params.after_page_number }}
+        </a>
+            {%- elsif dots and include.params.show_all != true -%}
+                {% assign dots = false -%}
+        <span class="page-numbers dots">&hellip;</span>
+            {%- endif %}
+        {% endif -%}
+
+        {% endfor -%}
+
+        {% comment -%}Link for next page{% endcomment -%}
+        {% if paginator.next_page -%}
+        <a class="next page-numbers" href="{{ site.paginate_path | replace: ':num', paginator.next_page | replace: '//', '/' | relative_url }}">
+            {{ include.params.next_page_text | default: STRING__DEFAULT_PAGINATION_NEXT_PAGE_TEXT }}
+        </a>
+        {%- endif %}
+    </div>
+</nav>
+{% endif -%}

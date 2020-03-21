@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang='{{ CURRENT_LOCALE }}' class="js svg background-fixed">
+    <head>
+        {% include dynamo file="_includes/head.html" mode="inclusive" indent_level=2 %}
+    </head>
+    <body class='{% include dynamo function="render_body_class" %} has-header-image colors-light'>
+        <div id="page" class="site">
+            <a class="skip-link screen-reader-text" href="#content">Skip to content</a>
+            {% include dynamo file="_includes/header.html" use_web_component=THEME_USE_WEB_COMPONENT indent_level=3 %}
+            {% if page.featured_image -%}
+            <div class="single-featured-image-header">
+                <img src="{{ page.featured_image }}" class="attachment-twentyseventeen-featured-image size-twentyseventeen-featured-image wp-post-image" alt="{{ page.title }}">
+            </div>
+            {% endif -%}
+            <div class="site-content-contain">
+                <div id="content" class="site-content">
+                    <div class="wrap">
+                        <header class="page-header">
+                            <h1 id="page-title" class="page-title">{{ page.taxonomy }}: {{ page.display_name | page.name }}</h1>
+                            {% if page.description -%}
+                            <div class="taxonomy-description">{{ page.description }}</div>
+                            {% endif -%}
+                        </header>
+                        <div id="primary" class="content-area">
+                            <main id="main" class="site-main" role="main">
+                                {% capture archive_where_exp -%}
+                                    {{ page.archive.taxonomy_query -}}
+                                    {% if page.archive.taxonomy_query and page.archive.where_exp %} and {% endif -%}
+                                    {{ page.archive.where_exp -}}
+                                {% endcapture -%}
+                                {% include dynamo function="render_posts" 
+                                    post_collection=page.archive.post_collection 
+                                    where_exp=archive_where_exp 
+                                    order_by=page.archive.order_by 
+                                    order=page.archive.order 
+                                    format="flat" 
+                                    show_post_excerpt=true 
+                                    show_post_content=false 
+                                    render_post_function="render_post_in_post_list" 
+                                    indent_level=8 %}
+                            </main><!-- #main -->
+                        </div><!-- #primary -->
+                        {% if page.has_sidebar == true -%}
+                            {% include dynamo file="_includes/sidebar.html" use_web_component=THEME_USE_WEB_COMPONENT indent_level=6 %}
+                        {%- endif %}
+                    </div><!-- .wrap -->
+                </div><!-- #content -->
+                {% include dynamo file="_includes/footer.html" use_web_component=THEME_USE_WEB_COMPONENT indent_level=4 %}
+            </div><!-- .site-content-contain -->
+        </div><!-- #page -->
+        {% include dynamo file="_includes/foot.html" mode="inclusive" indent_level=2 %}
+    </body>
+</html>

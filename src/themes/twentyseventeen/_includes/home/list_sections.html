@@ -1,0 +1,111 @@
+<div id="primary" class="content-area">
+    <main id="main" class="site-main" role="main">
+        {% unless paginator.page and paginator.page > 1 -%}
+            {% assign is_front_page = true -%}
+        {% endunless -%}
+
+        {% comment -%}Render home content section only on front page.{% endcomment -%}
+        {% if is_front_page == true -%}
+        <article class="twentyseventeen-panel page type-page status-publish hentry">
+            <div class="panel-content">
+                <div class="wrap">
+                    <header class="entry-header">
+                        <h2 class="entry-title">Home</h2>
+                    </header><!-- .entry-header -->
+                    <div class="entry-content">
+                        {% include dynamo function="render_content" content=content %}
+                    </div><!-- .entry-content -->
+                </div><!-- .wrap -->
+            </div><!-- .panel-content -->
+        </article>
+        {% endif -%}
+
+        {% include dynamo function="get_config" of="theme" key="home.list_sections" -%}
+        {% assign home_sections = config -%}
+        {% for section in home_sections -%}
+            {% assign home_section_id = home_section_id | default: 0 | plus: 1 -%}
+
+            {% case section.type -%}
+                {% when "content" -%}
+                {% comment -%}Render content sections only on front page{% endcomment -%}
+                {% if is_front_page == true -%}
+        <article id="panel{{ home_section_id }}" class="twentyseventeen-panel page type-page status-publish has-post-thumbnail hentry">
+            {% if section.featured_image -%}
+            <div class="panel-image" style="background-image: url('{{ section.featured_image }}');">
+                <div class="panel-image-prop" style="padding-top: 60%"></div>
+            </div>
+            {% endif -%}
+            <div class="panel-content">
+                <div class="wrap">
+                    <header class="entry-header">
+                        <h2 class="entry-title">{{ section.title }}</h2>
+                    </header>
+                    <div class="entry-content">
+                        {% include dynamo function="render_content" content=section.content %}
+                    </div>
+                </div><!-- .wrap -->
+            </div><!-- .panel-content -->
+        </article>
+                {%- endif -%}
+
+                {% when "list_posts" -%}
+        <article id="panel{{ home_section_id }}" class="twentyseventeen-panel page type-page status-publish has-post-thumbnail hentry">
+            {% comment -%}Render post listing featured image only on front page{% endcomment -%}
+            {% if is_front_page == true and section.featured_image -%}
+            <div class="panel-image" style="background-image: url('{{ section.featured_image }}');">
+                <div class="panel-image-prop" style="padding-top: 60%"></div>
+            </div>
+            {% endif -%}
+            <div class="panel-content">
+                <div class="wrap">
+                    <header class="entry-header">
+                        <h2 class="entry-title">{{ section.title }}</h2>
+                    </header>
+                    <div class="recent-posts">
+                        {% if page.path contains "index.html" and page.permalink == nil -%}
+                            {% assign enable_pagination = section.enable_pagination -%}
+                        {% else -%}
+                            {% assign enable_pagination = false -%}
+                        {% endif -%}
+                        {% if enable_pagination == true -%}
+                            {% assign num_of_posts = -1 -%}
+                            {% capture prev_page_text -%}
+                                {% include dynamo function="render_svg" icon="icon-arrow-left" -%}
+                                <span class="screen-reader-text">Previous page</span>
+                            {%- endcapture -%}
+                            {% capture prev_page_text -%}
+                                {% include dynamo function="compress_html" html=prev_page_text clippings="all" %}
+                            {%- endcapture -%}
+                            {% capture next_page_text -%}
+                                <span class="screen-reader-text">Next page</span>
+                                {% include dynamo function="render_svg" icon="icon-arrow-right" -%}
+                            {%- endcapture -%}
+                            {% capture next_page_text -%}
+                                {% include dynamo function="compress_html" html=next_page_text clippings="all" %}
+                            {%- endcapture -%}
+                            {% capture before_page_number -%}
+                                <span class="meta-nav screen-reader-text">Page </span>
+                            {%- endcapture -%}
+                        {% else -%}
+                            {% assign num_of_posts = site.paginate | default: 5 -%}
+                        {% endif -%}
+                        {% include dynamo function="render_posts" 
+                            format="flat"
+                            enable_pagination=enable_pagination 
+                            num_of_posts=num_of_posts 
+                            show_post_excerpt=section.show_post_excerpt
+                            show_post_content=section.show_post_content 
+                            render_post_function="render_post_in_post_list" 
+                            prev_page_text=prev_page_text
+                            next_page_text=next_page_text
+                            before_page_number=before_page_number
+                            indent_level=6 %}
+                    </div>
+                </div><!-- .wrap -->
+            </div><!-- .panel-content -->
+        </article>
+
+            {%- endcase %}
+        {% endfor %}
+    </main><!-- #main -->
+</div><!-- #primary -->

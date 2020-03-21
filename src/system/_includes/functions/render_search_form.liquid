@@ -1,0 +1,85 @@
+{% comment -%}---------------------------------------------------------------------------
+Function: render_search_form
+
+Description: Load the search form, including the search input field, and hooking up with 
+    the search plugin to dynamically display search results.
+
+Usage: {% include dynamo function="render_search_form" -%}
+
+Parameters:
+    * id                            (string) - Unique ID of the search form.  
+                                               Default: "search-form-{unique_id}"
+    * class                         (string) - CSS class of the search form.
+                                               Default: "search-form"
+    * search_field_id               (string) - Unique ID of the search input field. 
+                                               Default: "search-field-{unique_id}"
+    * search_field_class            (string) - CSS class of the search input field.
+                                               Default: "search-field"
+    * search_field_placeholder      (string) - Placeholder text for the search field. 
+                                               Default: STRING__DEFAULT_SEARCH_FIELD_PLACEHOLDER
+    * search_result_container_id    (string) - Unique ID of the search result container.
+                                               Default: "search-results-{unique_id}"
+    * search_result_container_class (string) - CSS class of the search result container. 
+                                               Default: "search-results"
+    * search_trigger                (string) - Trigger of the actual search
+        * "keyup":                  Search is triggered on key up.
+        * "press_enter":            Search is triggered on pressing 'enter'
+        * "stop_typing":            (Default) Search is triggered when user stops typing. 
+    * no_search_results_message     (string) - Message to display when nothing is found
+                                               Default: STRING__DEFAULT_NO_SEARCH_RESULTS_MESSAGE
+------------------------------------------------------------------------{% endcomment -%}
+
+{% assign default_search_form_id = "search-form-" | append: UNIQUE_ID -%}
+{% assign search_form_id = include.params.id | default: default_search_form_id -%}
+{% assign search_form_class = include.params.class | default: "search-form" -%}
+{% assign default_search_field_id = "search-field-" | append: UNIQUE_ID -%}
+{% assign search_field_id = include.params.search_field_id | default: default_search_field_id -%}
+{% assign search_field_class = include.params.search_field_class | default: "search-field" -%}
+{% assign search_field_placeholder = include.params.search_field_placeholder | default: STRING__DEFAULT_SEARCH_FIELD_PLACEHOLDER -%}
+{% assign default_search_result_container_id = "search-results-" | append: UNIQUE_ID -%}
+{% assign search_result_container_id = include.params.search_result_container_id | default: default_search_result_container_id -%}
+{% assign search_result_container_class = include.params.search_result_container_class | default: "search-results" -%}
+{% case include.params.search_trigger -%}
+    {% when "stop_typing" -%}{% assign search_trigger = 0 -%}
+    {% when "keyup" -%}{% assign search_trigger = 1 -%}
+    {% when "press_enter" -%}{% assign search_trigger = 2 -%}
+    {% else -%}{% assign search_trigger = 0 -%}
+{% endcase -%}
+
+<form role="search" id="{{ search_form_id }}" class="{{ search_form_class }}" onSubmit="return false;" action="">
+    <label for="{{ search_field_id }}">
+        <span class="screen-reader-text">Search for:</span>
+    </label>
+    <input type="search" id="{{ search_field_id }}" class="{{ search_field_class }}" placeholder="{{ search_field_placeholder }}" name="s" />
+    <div id="{{ search_result_container_id }}" class="{{ search_result_container_class }}">
+    </div>
+</form>
+<script>
+(function() {
+    var searchForm = new Dynamo.SearchForm(
+        '{{ search_form_id }}',
+        '{{ search_field_id }}',
+        '{{ search_result_container_id }}',
+        {{ search_trigger }}
+    );
+    searchForm.onsearchcomplete = function(e) {
+        if (e.detail.searchResults !== undefined) {
+            if (e.detail.searchResults.length > 0) {
+                var cache = new Array();
+                cache.push('<ul class="search-results">');
+                for (var i in e.detail.searchResults) {
+                    var searchResult = e.detail.searchResults[i];
+                    cache.push('<li><a href="' + searchResult.url + '">' + searchResult.title + '</a></li>');
+                }
+                cache.push('</ul>');
+                searchForm.searchResultContainer.innerHTML = cache.join('');
+            } else {
+                searchForm.searchResultContainer.innerHTML = '{{ include.params.no_search_results_message | default: STRING__DEFAULT_NO_SEARCH_RESULTS_MESSAGE }}';
+            }
+        }
+    };
+    searchForm.onsearchreset = function(e) {
+        searchForm.searchResultContainer.innerHTML = '';
+    };
+}());
+</script>

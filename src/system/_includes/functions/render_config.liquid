@@ -1,0 +1,21 @@
+{% comment -%}---------------------------------------------------------------------------
+Function: render_config
+
+Usage: 
+    {% include dynamo function="render_config" of="site" key="title" -%}
+    The above code renders the site title from locale config and site config. 
+
+Parameters:
+    * of                    (string) - "site" or "theme"
+    * key                   (string) - Config key
+    * default_value         (string) - Default value if the key is not available.
+    * locale                (string) - Optional locale info
+
+------------------------------------------------------------------------{% endcomment -%}
+
+{% include dynamo function="get_config" 
+    of=include.params.of 
+    key=include.params.key 
+    default_value=include.params.default_value 
+    locale=include.params.locale -%}
+{{ config }}

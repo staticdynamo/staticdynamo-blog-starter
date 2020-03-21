@@ -1,0 +1,23 @@
+{% if include.params.plugin and include.params.category -%}
+    {% if include.params.from == "theme" -%}
+        {% capture PLUGIN_DIRECTORY -%}
+            themes/{{ site.themes.active }}/{{ include.params.category }}/{{ include.params.plugin }}
+        {%- endcapture -%}
+    {% else -%}
+        {% capture PLUGIN_DIRECTORY -%}
+            plugins/{{ include.params.category }}/{{ include.params.plugin }}
+        {%- endcapture -%}
+    {% endif -%}
+    {% capture PLUGIN_FILE -%}
+        {{ PLUGIN_DIRECTORY }}/_includes/index.html
+    {%- endcapture -%}
+    {% capture PLUGIN_DIRECTORY_URL -%}
+        {{ SITE_BASEURL }}/src/{{ PLUGIN_DIRECTORY }}
+    {%- endcapture -%}
+    
+    {% capture plugin_output -%}
+        {% include {{ PLUGIN_FILE }} params=include.params -%}
+    {%- endcapture -%}
+    
+    {{ plugin_output | strip -}}
+{% endif -%}

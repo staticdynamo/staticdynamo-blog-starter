@@ -1,0 +1,12 @@
+{% comment -%}
+----------------------------------------------------------------------------------
+Widget: Search
+----------------------------------------------------------------------------------
+{% endcomment -%}
+{% assign widget_search_unique_id = UNIQUE_ID | prepend: "search-" -%}
+<section id="{{ widget_search_unique_id }}" class="widget widget_search">
+    {% if include.params.settings.title -%}
+    <h2 class="widget-title">{{ include.params.settings.title }}</h2>
+    {% endif -%}
+    {% include dynamo function="render_search_form" indent_level=1 %}
+</section>

@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang='{{ CURRENT_LOCALE }}'>
+    <head>
+        {% include dynamo file="_includes/head.html" mode="inclusive" indent_level=2 %}
+        <!-- begin layout head -->
+        {% include dynamo function="enqueue_meta_tag" for="site_verification" indent_level=2 %}
+        <!-- end layout head -->
+    </head>
+    <body>
+        <div class="wrapper">
+            {% include dynamo file="_includes/header.html" indent_level=3 %}
+            <section>
+                <div class="home-content">
+                    {% include dynamo function="render_content" content=content indent_level=4 %}
+                </div>
+                {% if site.posts.size > 0 -%}
+                <h2>Posts</h2>
+                {% if page.path contains "index." -%}
+                    {% assign enable_pagination = site.themes.minimal.home.enable_pagination -%}
+                {% else -%}
+                    {% assign enable_pagination = false -%}
+                {% endif -%}
+                {% if enable_pagination == true -%}
+                    {% assign num_of_posts = -1 -%}
+                {% else -%}
+                    {% assign num_of_posts = site.paginate | default: 5 -%}
+                {% endif -%}
+                {% include dynamo function="render_posts" 
+                    format="flat"
+                    enable_pagination=enable_pagination 
+                    num_of_posts=num_of_posts 
+                    render_post_function="render_post_in_post_list"
+                    indent_level=4 %}
+                {% endif -%}
+            </section>
+            {% include dynamo file="_includes/footer.html" indent_level=3 %}
+        </div>
+        {% include dynamo file="_includes/foot.html" mode="inclusive" indent_level=2 %}
+    </body>
+</html>

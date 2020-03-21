@@ -1,0 +1,25 @@
+{% comment -%}---------------------------------------------------------------------------
+Function: get_category
+
+Description: Get category based on the given category name. 
+
+Usage:
+    {% include dynamo function="get_category" name="Video" %}
+    The above code gets the "Video" category for the current locale. If the category is 
+    not available, the resulting category variable is nil.
+
+Parameters:
+    * name                  (string) - Name of the category.
+    * locale                (string) - Locale.  Default: CURRENT_LOCALE
+
+------------------------------------------------------------------------{% endcomment -%}
+
+{% assign category = nil -%}
+{% if include.params.name -%}
+    {% assign temp_categories = site.terms | where: "name", include.params.name | where: "taxonomy", "category" -%}
+    {% assign locale = include.params.locale | default: CURRENT_LOCALE -%}
+    {% if locale and locale != site.locale -%}
+        {% assign temp_categories = temp_categories | where: "locale", locale -%}
+    {% endif -%}
+    {% assign category = temp_categories | first -%}
+{% endif -%}

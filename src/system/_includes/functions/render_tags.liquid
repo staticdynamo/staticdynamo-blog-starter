@@ -1,0 +1,230 @@
+{% comment -%}---------------------------------------------------------------------------
+Function: render_tags
+
+Description: Render a list of tags.  Each tag is linked to the tag archive page.
+
+Usage:
+    {% include dynamo function="render_tags" format="flat" separator=", " %}
+    The above code renders a list of tags for the current locale in the flat format.  
+    Tags are seperated by ", ".
+
+    {% include dynamo function="render_tags" 
+        num_of_tags=10 
+        order_by="size" 
+        order="DESC" 
+        format="list" 
+        show_size=true %}
+    The above code renders top 10 tags with archive size for the current locale in the 
+    list format.
+
+Parameters:
+    * names                     (array)  - An array of tag names (e.g. post.tags).
+    * where_exp                 (string) - Filter the tags based on the given where exp.
+                                           In the where_exp, use 'tag' to refer to the 
+                                           tag object. 
+    * locale                    (string) - Locale of the tags to get. 
+                                           Default: CURRENT_LOCALE. If locale equals 
+                                           site.locale, get all tags; otherwise, get tags 
+                                           of the given locale.
+    * hide_empty                (bool)   - Whether to hide tags with empty archive or not. 
+                                           Default: false, meaning that tags with empty 
+                                           archive will also be rendered.
+    * order_by                  (string) - Order the tags by "size" or any field of tag 
+                                           (e.g. "name", "display_name")
+    * order                     (string) - "ASC" or "DESC".  The parameter is valid only 
+                                           when order_by is provided.
+
+    * format                    (string) - Format of the display.
+                                           "list" - an unordered list <ul>
+                                           "flat" - separated by 'separator'
+                                           "dropdown" - a dropdown list
+                                           "json" - json format
+    * num_of_tags               (int)    - The maximum number of tags to display.
+                                           Default to display all tags. If num_of_tags 
+                                           is less than 0, it displays all tags too. 
+    * render_tag_function       (string) - Filter function to overwrite the default tag 
+                                           rendering.
+    * show_size                 (bool)   - Whether to show the tag archive size or not. 
+                                           Default: false.
+    * before_link_text          (string) - Text that goes before the text of the link. 
+    * after_link_text           (string) - Text that goes after the text of the link. 
+
+    Parameters for the "list" format:
+    * container_class           (string) - CSS class to use for the ul element which 
+                                           forms the tag list. 
+                                           Default: 'tag-list'.
+    * item_class                (string) - CSS class to use for the li element which 
+                                           forms the tag list. 
+                                           Default: 'tag-item'.
+    
+    Parameters for the "flat" format:
+    * separator                 (string) - The text/space between tags. Default: " "
+
+------------------------------------------------------------------------{% endcomment -%}
+
+{% assign num_of_tags = include.params.num_of_tags | default: -1 -%}
+{% if num_of_tags != 0 -%}
+
+    {% comment -%}Get tags{% endcomment -%}
+    {% include dynamo function="get_tags" 
+        names=include.params.names 
+        where_exp=include.params.where_exp 
+        locale=include.params.locale 
+        hide_empty=include.params.hide_empty 
+        order_by=include.params.order_by 
+        order=include.params.order -%}
+
+    {% if tags.size > 0 -%}
+
+        {% comment -%}If tag size is needed, get tag sizes{% endcomment -%}
+        {% if include.params.show_size == true or include.params.order_by == "size" -%}
+            {% assign tag_archive_settings = site.taxonomies.tag.settings.archive -%}
+            {% include dynamo function="get_posts" 
+                post_collection=tag_archive_settings.post_collection 
+                where_exp=tag_archive_settings.where_exp 
+                locale=include.params.locale -%}
+            {% assign taxonomy_field = tag_archive_settings.taxonomy_field | default: "tags" -%}
+            {% assign tag_names = tags | map: "name" -%}
+            {% assign nonempty_tags = posts | map: taxonomy_field | 
+                join: "," | join: "," | split: "," | group_by_exp: "item", "item" |
+                where_exp: "tag", "tag_names contains tag.name" -%}
+        {% endif -%}
+
+        {% comment -%}Render tags ordered by archive size{% endcomment -%}
+        {% if include.params.order_by == "size" -%}
+            {% comment -%}Sort tag sizes{% endcomment -%}
+            {% assign nonempty_tags = nonempty_tags | sort: "size" | reverse -%}
+
+            {% assign c = 0 -%}
+            {% case include.params.format -%}
+
+{%- comment -%}'list' format{% endcomment -%}
+{% when "list" -%}
+<ul class='{{ include.params.container_class | default: "tag-list" }}'>
+    {% for nonempty_tag in nonempty_tags -%}
+        {% if num_of_tags > 0 and c >= num_of_tags -%}
+            {% break -%}
+        {% endif -%}
+
+        {% assign tag = tags | where: "name", nonempty_tag.name | first -%}
+        {% if tag -%}
+            {% assign c = c | plus: 1 -%}
+    <li class='{{ include.params.item_class | default: "tag-item" }}'>
+        {% if include.params.render_tag_function -%}
+            {% include dynamo function=include.params.render_tag_function 
+                tag=tag 
+                size=nonempty_tag.size 
+                indent_level=2 %}
+        {% else -%}
+        <a href='{{ tag.url }}'>
+            {{ include.params.before_link_text }}{{ tag.display_name | default: tag.name }}{{ include.params.after_link_text -}}
+            {% if include.params.show_size == true -%}<span class="tag-size"> ({{ nonempty_tag.size }})</span>{%- endif %}
+        </a>
+        {%- endif %}
+    </li>
+        {%- endif %}
+    {%- endfor %}
+    {% if c < num_of_tags and include.params.hide_empty != true -%}
+        {% comment -%}Display some empty tags{% endcomment -%}
+    {% endif -%}
+</ul>
+
+{%- comment -%}'flat' format{% endcomment -%}
+{% when "flat" -%}
+{% for nonempty_tag in nonempty_tags -%}
+    {% if num_of_tags > 0 and c >= num_of_tags -%}
+        {% break -%}
+    {% endif -%}
+
+    {% assign tag = tags | where: "name", nonempty_tag.name | first -%}
+    {% if tag -%}
+        {% if c > 0 -%}{{ include.params.separator | default: " " }}{% endif -%}
+        {% assign c = c | plus: 1 -%}
+        {% if include.params.render_tag_function -%}
+            {% include dynamo function=include.params.render_tag_function 
+                tag=tag 
+                size=nonempty_tag.size %}
+        {% else -%}
+<a href='{{ tag.url }}'>
+    {{ include.params.before_link_text }}{{ tag.display_name | default: tag.name }}{{ include.params.after_link_text -}}
+    {% if include.params.show_size == true -%}<span class="tag-size"> ({{ nonempty_tag.size }})</span>{%- endif %}
+</a>
+        {%- endif %}
+    {%- endif %}
+{% endfor -%}
+{% if c < num_of_tags and include.params.hide_empty != true -%}
+    {% comment -%}Display some empty tags{% endcomment -%}
+{% endif -%}
+
+            {% endcase -%}
+
+        {% else -%}
+        {% comment -%}Render tags ordered by any other fields{% endcomment -%}
+
+            {% assign c = 0 -%}
+            {% case include.params.format -%}
+
+{%- comment -%}'list' format{% endcomment -%}
+{% when "list" -%}
+<ul class='{{ include.params.container_class | default: "tag-list" }}'>
+    {% for tag in tags -%}
+        {% if num_of_tags > 0 and c >= num_of_tags -%}
+            {% break -%}
+        {% endif -%}
+
+        {% assign c = c | plus: 1 -%}
+        {% if include.params.show_size == true -%}
+            {% assign tag_size = nonempty_tags | where: "name", tag.name | map: "size" | first | default: 0 -%}
+        {% else -%}
+            {% assign tag_size = nil -%}
+        {% endif -%}
+    <li class='{{ include.params.item_class | default: "tag-item" }}'>
+        {% if include.params.render_tag_function -%}
+            {% include dynamo function=include.params.render_tag_function 
+                tag=tag 
+                size=tag_size 
+                indent_level=2 %}
+        {% else -%}
+        <a href='{{ tag.url }}'>
+            {{ include.params.before_link_text }}{{ tag.display_name | default: tag.name }}{{ include.params.after_link_text -}}
+            {% if include.params.show_size == true -%}
+                <span class="tag-size"> ({{ tag_size }})</span>
+            {%- endif %}
+        </a>
+        {%- endif %}
+    </li>
+    {%- endfor %}
+</ul>
+
+{%- comment -%}'flat' format{% endcomment -%}
+{% when "flat" -%}
+{% for tag in tags -%}
+    {% if num_of_tags > 0 and c >= num_of_tags -%}
+        {% break -%}
+    {% endif -%}
+
+    {% if c > 0 -%}{{ include.params.separator | default: " " }}{% endif -%}
+    {% assign c = c | plus: 1 -%}
+    {% if include.params.show_size == true -%}
+        {% assign tag_size = nonempty_tags | where: "name", tag.name | map: "size" | first | default: 0 -%}
+    {% else -%}
+        {% assign tag_size = nil -%}
+    {% endif -%}
+
+    {% if include.params.render_tag_function -%}
+        {% include dynamo function=include.params.render_tag_function tag=tag size=tag_size %}
+    {% else -%}
+<a href='{{ tag.url }}'>
+    {{ include.params.before_link_text }}{{ tag.display_name | default: tag.name }}{{ include.params.after_link_text -}}
+    {% if include.params.show_size == true -%}
+        <span class="tag-size"> ({{ tag_size }})</span>
+    {%- endif %}
+</a>
+    {%- endif %}
+{% endfor -%}
+
+            {% endcase -%}
+        {% endif -%}
+
+    {% endif -%}
+{% endif -%}

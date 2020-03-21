@@ -1,0 +1,7 @@
+{% comment -%}---------------------------------------------------------------------------
+Always have {% include dynamo file="_includes/foot.html" mode="inclusive" -%} just before 
+the closing </body> tag of your layout.  You generally use this partial to reference 
+JavaScript files.
+------------------------------------------------------------------------{% endcomment -%}
+
+{% include dynamo function="enqueue_script" for="analytics" %}

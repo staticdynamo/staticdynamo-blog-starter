@@ -1,0 +1,18 @@
+{% comment -%}---------------------------------------------------------------------------
+Widget: text
+
+Description: 
+
+Parameters: 
+    * settings          (object) - Settings of the widget
+------------------------------------------------------------------------{% endcomment -%}
+
+{% assign widget_text_unique_id = UNIQUE_ID | prepend: "text-" -%}
+<section id="{{ widget_text_unique_id }}" class="widget widget_text">
+    {% if include.params.settings.title -%}
+    <h2 class="widget-title">{{ include.params.settings.title }}</h2>
+    {% endif -%}
+    <div class="textwidget">
+        {{ include.params.settings.content | markdownify }}
+    </div>
+</section>

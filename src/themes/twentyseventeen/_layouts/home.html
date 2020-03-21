@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang='{{ CURRENT_LOCALE }}' class="js svg background-fixed">
+    <head>
+        {% include dynamo file="_includes/head.html" mode="inclusive" indent_level=2 %}
+        <!-- begin layout head -->
+        {% include dynamo function="enqueue_meta_tag" for="site_verification" indent_level=2 %}
+        <!-- end layout head -->
+    </head>
+    <body class='{% include dynamo function="render_body_class" %} has-header-image colors-light'>
+        <div id="page" class="site">
+            <a class="skip-link screen-reader-text" href="#content">Skip to content</a>
+            {% include dynamo file="_includes/header.html" use_web_component=THEME_USE_WEB_COMPONENT indent_level=3 %}
+            {% if page.featured_image -%}
+            <div class="single-featured-image-header">
+                <img src="{{ page.featured_image }}" class="attachment-twentyseventeen-featured-image size-twentyseventeen-featured-image wp-post-image" alt="{{ page.title }}">
+            </div>
+            {% endif -%}
+            <div class="site-content-contain">
+                <div id="content" class="site-content">
+                    {% capture home_template_file -%}
+                        _includes/home/{% include dynamo function="render_config" of="theme" key="home.template" default_value="list_posts" -%}.html
+                    {%- endcapture -%}
+                    {% include dynamo file=home_template_file from="theme" indent_level=5 %}
+                </div><!-- #content -->
+                {% include dynamo file="_includes/footer.html" use_web_component=THEME_USE_WEB_COMPONENT indent_level=4 %}
+            </div><!-- .site-content-contain -->
+        </div><!-- #page -->
+        {% include dynamo file="_includes/foot.html" mode="inclusive" indent_level=2 %}
+    </body>
+</html>

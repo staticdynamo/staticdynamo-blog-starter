@@ -1,0 +1,73 @@
+{% comment -%}---------------------------------------------------------------------------
+Function: get_terms
+
+Description: Get a list of terms of the given taxonomy name.
+
+Usage:
+    {% include dynamo function="get_terms" taxonomy="author" -%}
+    The above code gets a list of authors of the current locale. 
+
+Parameters:
+    * taxonomy              (string) - Name of the taxonomy.
+    * names                 (array)  - An array of term names. If the names parameter is 
+                                       empty, the result is empty.  If the names 
+                                       parameter is nil or not provided, the result is 
+                                       based on the other parameters. 
+    * where_exp             (string) - Filter the terms based on the given where exp. 
+                                       In the where_exp, use 'term' to refer to the 
+                                       term object. 
+    * locale                (string) - Locale of the terms to get. 
+                                       Default: CURRENT_LOCALE. If locale equals 
+                                       site.locale, get all terms; otherwise, get terms 
+                                       of the given locale.
+    * hide_empty            (bool)   - Whether to hide terms with empty archive or not. 
+                                       Default: false, meaning that terms with empty 
+                                       archive will also be returned.
+    * order_by              (string) - "name", "display_name", or any field of the term
+    * order                 (string) - "ASC" or "DESC".  The parameter is valid only when 
+                                       order_by is provided.
+
+------------------------------------------------------------------------{% endcomment -%}
+
+{% if include.params.taxonomy -%}
+    {% if include.params.names == empty -%}
+        {% assign terms = empty -%}
+    {% else -%}
+        {% assign terms = site.terms | where: "taxonomy", include.params.taxonomy -%}
+
+        {% if include.params.names -%}
+            {% assign terms = terms | where_exp: "term", "include.params.names contains term.name" -%}
+        {% endif -%}
+
+        {% if incldue.params.where_exp -%}
+            {% assign terms = terms | where_exp: "term", include.params.where_exp -%}
+        {% endif -%}
+
+        {% assign locale = include.params.locale | default: CURRENT_LOCALE -%}
+        {% if locale and locale != site.locale -%}
+            {% assign terms = terms | where: "locale", locale -%}
+        {% endif -%}
+
+        {% if include.params.hide_empty == true -%}
+            {% comment -%}Remove empty terms{% endcomment -%}
+            {% assign taxonomy_archive_settings = site.taxonomies[include.params.taxonomy].settings.archive -%}
+            {% include dynamo function="get_posts" 
+                post_collection=taxonomy_archive_settings.post_collection 
+                where_exp=taxonomy_archive_settings.where_exp -%}
+            {% assign taxonomy_field = taxonomy_archive_settings.taxonomy_field | default: include.params.taxonomy -%}
+            {% assign nonempty_terms = posts | map: taxonomy_field | 
+                join: "," | join: "," | split: "," | group_by_exp: "item", "item" | 
+                map: "name" -%}
+            {% assign terms = terms | where_exp: "term", "nonempty_terms contains term.name" -%}
+        {% endif -%}
+
+        {% if include.params.order_by -%}
+            {% assign terms = terms | sort: include.params.order_by -%}
+            {% if include.params.order == "DESC" -%}
+                {% assign terms = terms | reverse -%}
+            {% endif -%}
+        {% endif -%}
+    {% endif -%}
+{% else -%}
+    {% assign terms = nil -%}
+{% endif -%}

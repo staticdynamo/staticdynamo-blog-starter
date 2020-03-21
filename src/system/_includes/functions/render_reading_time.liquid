@@ -1,0 +1,15 @@
+{% comment -%}---------------------------------------------------------------------------
+Function: render_reading_time
+
+Description: Render the estimated reading time in minutes of the given content.
+
+Parameters:
+    * content               (string) - 
+------------------------------------------------------------------------{% endcomment -%}
+
+{% assign number_of_words = include.params.content | number_of_words -%}
+{% if number_of_words < 360 -%}
+  1 minute
+{% else -%}
+  {{ number_of_words | divided_by: 180 }} minutes
+{% endif -%}

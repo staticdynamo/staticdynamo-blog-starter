@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang='{{ CURRENT_LOCALE }}'>
+    <head>
+        {% include dynamo file="_includes/head.html" mode="inclusive" indent_level=2 %}
+        <!-- begin layout head -->
+        {% include dynamo function="enqueue_meta_tag" for="site_verification" indent_level=2 %}
+        <!-- end layout head -->
+    </head>
+    <body>
+        {% include dynamo file="_includes/header.html" indent_level=2 %}
+        <main class="page-content" aria-label="Content">
+            <div class="wrapper">
+                <div class="home">
+                    {% if page.title -%}
+                    <h1 class="page-heading">{{ page.title }}</h1>
+                    {% endif -%}
+
+                    {% include dynamo function="render_content" content=content indent_level=5 %}
+
+                    {% if site.posts.size > 0 -%}
+                    <h2 class="post-list-heading">Posts</h2>
+                    {% if page.path contains "index.html" and page.permalink == nil -%}
+                        {% assign enable_pagination = site.themes.minima.home.enable_pagination -%}
+                    {% else -%}
+                        {% assign enable_pagination = false -%}
+                    {% endif -%}
+                    {% if enable_pagination == true -%}
+                        {% assign num_of_posts = -1 -%}
+                    {% else -%}
+                        {% assign num_of_posts = site.paginate | default: 5 -%}
+                    {% endif -%}
+                    {% include dynamo function="render_posts" 
+                        format="list"
+                        container_class="post-list"
+                        enable_pagination=enable_pagination 
+                        num_of_posts=num_of_posts 
+                        render_post_function="render_post_in_post_list"
+                        show_post_excerpt=true
+                        indent_level=5 %}
+
+                    <p class="rss-subscribe">subscribe <a href='{{ "/feed.xml" | relative_url }}'>via RSS</a></p>
+                    {% endif -%}
+                </div>
+            </div>
+        </main>
+        {% include dynamo file="_includes/footer.html" indent_level=2 %}
+        {% include dynamo file="_includes/foot.html" mode="inclusive" indent_level=2 %}
+    </body>
+</html>

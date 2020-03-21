@@ -1,0 +1,13 @@
+{% comment -%}---------------------------------------------------------------------------
+Function: render_url
+
+Description: Renders the given URL and intelligently prepends the baseurl when necessary.
+
+Usage: {% include dynamo function="render_url" url="/media/2018/10/helloworld.png" -%}
+
+Parameters:
+    * url       (string) - The URL to be rendered.  If the URL is an absolute URL
+                           containing the http or https protocol, the URL will be rendered
+                           directly.  If the URL is a relatively URL, the function
+                           prepends the site baseurl.
+------------------------------------------------------------------------{% endcomment -%}

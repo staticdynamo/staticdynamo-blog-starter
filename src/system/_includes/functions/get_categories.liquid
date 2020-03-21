@@ -1,0 +1,68 @@
+{% comment -%}---------------------------------------------------------------------------
+Function: get_categories
+
+Description: Get a list of categories.
+
+Usage:
+    {% include dynamo function="get_categories" -%}
+    The above code gets a list of categories of the current locale. 
+
+Parameters:
+    * names                 (array)  - An array of category names (e.g. post.categories). 
+                                       If the names parameter is empty, the result is empty.  
+                                       If the names parameter is nil or not provided, the 
+                                       result is based on the other parameters. 
+    * where_exp             (string) - Filter the categories based on the given where exp. 
+                                       In the where_exp, use 'category' to refer to the 
+                                       category object. 
+    * locale                (string) - Locale of the categories to get. 
+                                       Default: CURRENT_LOCALE. If locale equals 
+                                       site.locale, get all categories; otherwise, get 
+                                       categories of the given locale.
+    * hide_empty            (bool)   - Whether to hide categories with empty archive or 
+                                       not. Default: false, meaning that categories with 
+                                       empty archive will also be returned.
+    * order_by              (string) - "name", "display_name" or any field of category
+    * order                 (string) - "ASC" or "DESC".  The parameter is valid only when 
+                                       order_by is provided.
+
+------------------------------------------------------------------------{% endcomment -%}
+
+{% if include.params.names == empty -%}
+    {% assign categories = empty -%}
+{% else -%}
+    {% assign categories = site.terms | where: "taxonomy", "category" -%}
+
+    {% if include.params.names -%}
+        {% assign categories = categories | where_exp: "category", "include.params.names contains category.name" -%}
+    {% endif -%}
+
+    {% if incldue.params.where_exp -%}
+        {% assign categories = categories | where_exp: "category", include.params.where_exp -%}
+    {% endif -%}
+
+    {% assign locale = include.params.locale | default: CURRENT_LOCALE -%}
+    {% if locale and locale != site.locale -%}
+        {% assign categories = categories | where: "locale", locale -%}
+    {% endif -%}
+
+    {% if include.params.hide_empty == true -%}
+        {% comment -%}Remove empty categories{% endcomment -%}
+        {% assign category_archive_settings = site.taxonomies.category.settings.archive -%}
+        {% include dynamo function="get_posts" 
+            post_collection=category_archive_settings.post_collection 
+            where_exp=category_archive_settings.where_exp 
+            locale=include.params.locale -%}
+        {% assign taxonomy_field = category_archive_settings.taxonomy_field | default: "categories" -%}
+        {% assign nonempty_categories = posts | map: taxonomy_field | 
+            join: "," | join: "," | split: "," | group_by_exp: "item", "item" | map: "name" -%}
+        {% assign categories = categories | where_exp: "category", "nonempty_categories contains category.name" -%}
+    {% endif -%}
+
+    {% if include.params.order_by -%}
+        {% assign categories = categories | sort: include.params.order_by -%}
+        {% if include.params.order == "DESC" -%}
+            {% assign categories = categories | reverse -%}
+        {% endif -%}
+    {% endif -%}
+{% endif -%}

@@ -1,0 +1,49 @@
+{% comment -%}---------------------------------------------------------------------------
+Function: enqueue_meta_tag
+
+Description: Enqueue meta tag in the HTML head for favicon, site verification SEO or 
+    other custom purposes.
+
+Usage: 
+    {% include dynamo function="enqueue_meta_tag" for="site_verification" -%}
+
+Parameters:
+    * for (string)   : can be "favicon", "site_verification", "seo", or anything else 
+                       (custom meta tag)
+------------------------------------------------------------------------{% endcomment -%}
+
+{% case include.params.for -%}
+    {% when "favicon" -%}
+    {% assign default_favicon_url = site.baseurl | append: "/favicon.ico" -%}
+    {% assign favicon_url = site.favicon | default: default_favicon_url -%}
+    {% assign default_apple_touch_url = site.baseurl | append: "/apple-touch-icon.png" -%}
+    {% assign apple_touch_url = site.apple_touch_icon | default: default_apple_touch_url -%}
+    {% assign default_mask_icon_url = site.baseurl | append: "/safari-pinned-tab.svg" -%}
+    {% assign mask_icon_url = site.mask_icon | default: default_mask_icon_url -%}
+<!-- favicon -->
+<link rel="icon" type="image/x-icon" href="{{ favicon_url }}">
+<link rel="apple-touch-icon" sizes="180x180" href="{{ apple_touch_url }}">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="manifest" href="/site.webmanifest">
+<link rel="mask-icon" href="{{ mask_icon_url }}" color="#5bbad5">
+
+    {% when "site_verification" -%}
+    {% for plugin_hash in site.site_verification -%}
+        {% assign site_verification_plugin_name = plugin_hash[0] -%}
+        {% assign site_verification_plugin = plugin_hash[1] -%}
+        {% if site_verification_plugin.enabled -%}
+            {% include dynamo function="load_plugin" plugin=site_verification_plugin_name category="site_verification" -%}
+        {%- endif -%}
+    {% endfor -%}
+
+    {% when "seo" -%}
+    {% for plugin_hash in site.seo -%}
+        {% assign seo_plugin_name = plugin_hash[0] -%}
+        {% assign seo_plugin = plugin_hash[1] -%}
+        {% if seo_plugin.enabled -%}
+            {% include dynamo function="load_plugin" plugin=seo_plugin_name category="seo" -%}
+        {%- endif -%}
+    {% endfor -%}
+
+{% endcase -%}

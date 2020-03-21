@@ -1,0 +1,189 @@
+{% comment -%}---------------------------------------------------------------------------
+This file allows theme creators to offer theme-specific functions or overwrite any of the 
+system functions.  The function parameters can be accessed through include.params object.
+------------------------------------------------------------------------{% endcomment -%}
+
+{% case include.function -%}
+
+{% comment -%}---------------------------------------------------------------------------
+Function: render_post_in_post_list
+
+Description: Filter the default display of a post in the 'render_posts' function call.
+
+Parameters:
+    * post                  (object) - The post object
+    * show_post_date        (bool)
+    * show_post_excerpt     (bool)
+    * show_post_content     (bool)
+------------------------------------------------------------------------{% endcomment -%}
+{% when "render_post_in_post_list" -%}
+{% assign category_classes = "" -%}
+{% for category in include.params.post.categories -%}
+    {% assign category_slug = category | slugify -%}
+    {% assign category_classes = category_classes | append: " category-" | append: category_slug -%}
+{% endfor -%}
+{% assign tag_classes = "" -%}
+{% for tag in include.params.post.tags -%}
+    {% assign tag_slug = tag | slugify -%}
+    {% assign tag_classes = tag_classes | append: " tag-" | append: tag_slug -%}
+{% endfor -%}
+<article class="post type-post status-publish format-standard hentry{{ category_classes }}{{ tag_classes }}">
+    <header class="entry-header">
+        <div class="entry-meta">
+            <span class="screen-reader-text">Posted on </span>
+            <a href="{{ include.params.post.url | relative_url }}" rel="bookmark">
+                <time class="entry-date published" datetime='{{ include.params.post.date | date: "%Y-%m-%d %H:%M" }}'>
+                    {% include dynamo function="render_datetime" datetime=post.date locale=page.locale date_format="default" %}
+                </time>
+            </a>
+        </div><!-- .entry-meta -->
+        <h3 class="entry-title">
+            <a href="{{ include.params.post.url | relative_url }}">{{ include.params.post.title }}</a>
+        </h3>
+    </header><!-- .entry-header -->
+    {% if include.params.post.featured_image -%}
+    <div class="post-thumbnail">
+        <a href="{{ include.params.post.url | relative_url }}">
+            <img src="{{ include.params.post.featured_image }}" class="post-featured-image" alt="{{ include.params.post.title }}">
+        </a>
+    </div><!-- .post-thumbnail -->
+    {% endif -%}
+    <div class="entry-content">
+        {% if include.params.show_post_content == true -%}
+            {% if include.params.post.content contains '<!--more-->' -%}
+                {% assign content_first_part = include.params.post.content | split: '<!--more-->' | first -%}
+        {% include dynamo function="render_content" content=content_first_part indent_level=2 %}
+        <a href="{{ include.params.post.url | relative_url }}" class="more-link">
+            Continue reading
+            <span class="screen-reader-text">{{ include.params.post.title }}</span>
+        </a>
+            {%- else -%}
+        {% include dynamo function="render_content" content=post.content indent_level=2 %}
+            {%- endif -%}
+        {% elsif include.params.show_post_excerpt == true -%}
+        {{ include.params.post.excerpt }}
+        <a href="{{ include.params.post.url | relative_url }}" class="more-link">
+            Continue reading
+            <span class="screen-reader-text">{{ include.params.post.title }}</span>
+        </a>
+        {%- endif %}
+    </div><!-- .entry-content -->
+</article>
+
+
+{% comment -%}---------------------------------------------------------------------------
+Function: render_header_menu_title
+
+Description: Filter the default navigation item title display in the header menu. 
+
+Parameters:
+    * title         (string) - The original title display
+    * item          (object) - The navigation item object whose title is to be displayed. 
+    * depth         (number) - The remaining depth of navigation items to be displayed.
+------------------------------------------------------------------------{% endcomment -%}
+{% when "render_header_menu_title" -%}
+{{ include.params.title }}
+{% if include.params.item.children and include.params.depth > 1 -%}
+    {% include dynamo function="render_svg" icon="icon-angle-down" %}
+{%- endif -%}
+
+
+{% comment -%}---------------------------------------------------------------------------
+Function: render_social_link_title
+
+Description: Filter the default navigation item title display in the social link list.
+
+Parameters:
+    * title         (string) - The original title display
+    * item          (object) - The navigation item object whose title is to be displayed. 
+    * depth         (number) - The remaining depth of navigation items to be displayed.
+------------------------------------------------------------------------{% endcomment -%}
+{% when "render_social_link_title" -%}
+<span class="screen-reader-text">{{ include.params.title }}</span>
+{% assign social_icon = item.icon | default: "chain" | prepend: "icon-" -%}
+{% include dynamo function="render_svg" icon=social_icon %}
+
+
+{% comment -%}---------------------------------------------------------------------------
+Function: render_body_class
+
+Description: Render <body> class based on the current page layout and properties
+
+Usage: {% include dynamo function="render_body_class" %}
+------------------------------------------------------------------------{% endcomment -%}
+{% when "render_body_class" -%}
+{% assign body_class = "" -%}
+
+{% case page.layout -%}
+    {% when "home" -%}
+        {% include dynamo function="get_config" of="theme" key="home.template" -%}
+        {% assign home_template = config -%}
+
+        {% comment -%}If it's the first page of "home"{% endcomment -%}
+        {% unless paginator.page and paginator.page > 1 -%}
+            {% assign body_class = body_class | append: "home" -%}
+            {% if home_template == "list_sections" -%}
+                {% assign body_class = body_class | append: " twentyseventeen-front-page" -%}
+            {% endif -%}
+        {% endunless -%}
+
+        {% if home_template == "list_posts" -%}
+            {% comment -%}If the home template is "list_posts"{% endcomment -%}
+            {% assign body_class = body_class | append: " blog hfeed has-sidebar" -%}
+        {% elsif home_template == "list_sections" -%}
+            {% comment -%}If the home template is "list_sections"{% endcomment -%}
+            {% include dynamo function="get_config" of="theme" key="page.template" default_value="one-column" -%}
+            {% assign body_class = body_class | 
+                append: " page-template-default page page-" | append: config -%}
+        {% endif -%}
+        
+    {% when "page" -%}
+        {% include dynamo function="get_config" of="theme" key="page.template" default_value="one-column" -%}
+        {% assign body_class = "page-template-default page page-" | append: config -%}
+        
+    {% when "post" -%}
+        {% assign body_class = "post-template-default single single-post single-format-standard" -%}
+        
+    {% when "archive" -%}
+        {% assign body_class = "archive" -%}
+{% endcase -%}
+
+{% if page.has_sidebar == true -%}
+    {% assign body_class = body_class | append: " has-sidebar" -%}
+{% endif -%}
+
+{{ body_class -}}
+
+
+{% comment -%}---------------------------------------------------------------------------
+Function: render_entry_footer
+
+Description: Prints HTML with meta information for the categories, and tags.
+
+Usage: {% include dynamo function="render_entry_footer" %}
+------------------------------------------------------------------------{% endcomment -%}
+{% when "render_entry_footer" -%}
+{% if page.categories != empty or page.tags != empty -%}
+<footer class="entry-footer">
+    <span class="cat-tags-links">
+        {% if page.categories != empty -%}
+        <span class="cat-links">
+            {% include dynamo function="render_svg" icon="icon-folder-open" indent_level=3 %}
+            <span class="screen-reader-text">Categories</span>
+            {% include dynamo function="render_categories" names=page.categories format="flat" separator=", " indent_level=3 %}
+        </span>
+        {%- endif -%}
+        {%- if page.tags != empty %}
+        <span class="tags-links">
+            {% include dynamo function="render_svg" icon="icon-hashtag" indent_level=3 %}
+            <span class="screen-reader-text">Tags</span>
+            {% include dynamo function="render_tags" names=page.tags format="flat" separator=", " indent_level=3 %}
+        </span>
+        {%- endif %}
+    </span>
+</footer><!-- .entry-footer -->
+{%- endif -%}
+
+
+{%- else -%}<N/A>
+{%- endcase -%}

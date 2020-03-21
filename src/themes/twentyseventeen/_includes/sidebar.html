@@ -1,0 +1,13 @@
+{% if include.params.use_web_component == true -%}
+<twentyseventeen-sidebar></twentyseventeen-sidebar>
+{% else -%}
+<aside id="secondary" class="widget-area" role="complementary" aria-label="Blog Sidebar">
+    {% if page.sidebar -%}
+        {% assign sidebar_to_render = page.sidebar -%}
+    {% else -%}
+        {% include dynamo function="get_config" of="theme" key="sidebar" default_value="default" -%}
+        {% assign sidebar_to_render = config -%}
+    {% endif -%}
+    {% include dynamo function="render_sidebar" sidebar=sidebar_to_render indent_level=1 %}
+</aside>
+{% endif -%}

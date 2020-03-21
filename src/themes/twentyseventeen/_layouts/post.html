@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang='{{ CURRENT_LOCALE }}' class="js svg background-fixed">
+    <head>
+        {% include dynamo file="_includes/head.html" mode="inclusive" indent_level=2 %}
+    </head>
+    <body class='{% include dynamo function="render_body_class" %} has-header-image colors-light'>
+        <div id="page" class="site">
+            <a class="skip-link screen-reader-text" href="#content">Skip to content</a>
+            {% include dynamo file="_includes/header.html" use_web_component=THEME_USE_WEB_COMPONENT indent_level=3 %}
+            {% if page.featured_image -%}
+            <div class="single-featured-image-header">
+                <img src="{{ page.featured_image }}" class="attachment-twentyseventeen-featured-image size-twentyseventeen-featured-image wp-post-image" alt="{{ page.title }}">
+            </div>
+            {% endif -%}
+            <div class="site-content-contain">
+                <div id="content" class="site-content">
+                    <div class="wrap">
+                        <div id="primary" class="content-area">
+                            <main id="main" class="site-main" role="main">
+                                <article class="post type-post status-publish format-standard hentry">
+                                    {% if page.is_sticky -%}
+                                        {% include dynamo function="render_svg" icon="icon-thumb-tack" indent_level=9 %}
+                                    {% endif -%}
+                                    <header class="entry-header">
+                                        <div class="entry-meta">
+                                            <span class="posted-on">
+                                                <span class="screen-reader-text">Posted on</span>
+                                                <a href="{{ page.url | relative_url }}" rel="bookmark">
+                                                    <time class="entry-date published" datetime='{{ page.date | date: "%Y-%m-%d %H:%M" }}'>
+                                                        {% include dynamo function="render_datetime" datetime=page.date locale=page.locale date_format="default" %}
+                                                    </time>
+                                                </a>
+                                            </span>
+                                        </div><!-- .entry-meta-->
+                                        <h1 class="entry-title">
+                                            {{ page.title }}
+                                        </h1>
+                                    </header><!-- .entry-header-->
+                                    <div class="entry-content">
+                                        {% include dynamo function="render_content" content=content indent_level=10 %}
+                                    </div><!-- .entry-content -->
+                                    {% include dynamo function="render_entry_footer" indent_level=9 %}
+                                </article>
+                                {% include dynamo function="render_comments" indent_level=8 %}
+                            </main><!-- #main -->
+                        </div><!-- #primary -->
+                        {% if page.has_sidebar == true -%}
+                            {% include dynamo file="_includes/sidebar.html" use_web_component=THEME_USE_WEB_COMPONENT indent_level=6 %}
+                        {%- endif %}
+                    </div><!-- .wrap -->
+                </div><!-- #content -->
+                {% include dynamo file="_includes/footer.html" use_web_component=THEME_USE_WEB_COMPONENT indent_level=4 %}
+            </div><!-- .site-content-contain -->
+        </div><!-- #page -->
+        {% include dynamo file="_includes/foot.html" mode="inclusive" indent_level=2 %}
+    </body>
+</html>

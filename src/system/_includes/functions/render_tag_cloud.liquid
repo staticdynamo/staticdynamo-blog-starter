@@ -1,0 +1,242 @@
+{% comment -%}---------------------------------------------------------------------------
+Function: render_tag_cloud
+
+Description: Display tags in what is called a 'tag cloud', where the size of each tag is 
+    determined by its archive size.
+
+Usage:
+    {% include dynamo function="render_tag_cloud" format="list" show_size=true %}
+
+Parameters:
+    * names                     (array)  - An array of tag names (e.g. post.tags).
+    * where_exp                 (string) - Filter the tags based on the given where exp.
+                                           In the where_exp, use 'tag' to refer to the 
+                                           tag object. 
+    * locale                    (string) - Locale of the tags to get. 
+                                           Default: CURRENT_LOCALE. If locale equals 
+                                           site.locale, get all tags; otherwise, get tags 
+                                           of the given locale.
+    * hide_empty                (bool)   - Whether to hide tags with empty archive or not. 
+                                           Default: false, meaning that tags with empty 
+                                           archive will also be rendered.
+    * order_by                  (string) - Order the tags by any field of tag (e.g. 
+                                           "name", "display_name")
+    * order                     (string) - "ASC" or "DESC".  The parameter is valid only 
+                                           when order_by is provided.
+
+    * format                    (string) - Format of the tag cloud display.
+                                           "list" - an unordered list <ul>
+                                           "flat" - separated by 'separator'
+    * num_of_tags               (int)    - The maximum number of tags to display. 
+                                           Default to display all tags. If num_of_tags 
+                                           is less than 0, it displays all tags too. 
+    * smallest                  (int)    - The text size of the tag with the smallest 
+                                           archive size (units given by the unit 
+                                           parameter). Default: 8
+    * largest                   (int)    - The text size of the tag with the largest 
+                                           archive size (units given by the unit 
+                                           parameter). Default: 22
+    * unit                      (string) - CSS text size unit to use with the 'smallest' 
+                                           and 'largest' values. Accepts any valid CSS 
+                                           text size unit. Default 'pt'.
+    * render_tag_function       (string) - Filter function to overwrite the default tag 
+                                           rendering.
+    * show_size                 (bool)   - Whether to show the tag archive size or not. 
+                                           Default: false.
+    * before_link_text          (string) - Text that goes before the text of the link. 
+    * after_link_text           (string) - Text that goes after the text of the link. 
+
+    Parameters for the "list" format:
+    * container_class           (string) - CSS class to use for the ul element which 
+                                           forms the tag cloud in the list format. 
+                                           Default 'tag-cloud'.
+    * item_class                (string) - CSS class to use for the li element which 
+                                           forms the tag list. Default: 'tag-item'.
+
+    Parameters for the "flat" format:
+    * separator                 (string) - The text/space between tags. Default: " "
+
+------------------------------------------------------------------------{% endcomment -%}
+
+{% assign num_of_tags = include.params.num_of_tags | default: -1 -%}
+{% if num_of_tags != 0 -%}
+
+    {% comment -%}Get tags{% endcomment -%}
+    {% include dynamo function="get_tags" 
+        names=include.params.names 
+        where_exp=include.params.where_exp 
+        locale=include.params.locale 
+        hide_empty=include.params.hide_empty 
+        order_by=include.params.order_by 
+        order=include.params.order -%}
+
+    {% if tags.size > 0 -%}
+
+        {% assign smallest_font = include.params.smallest | default: 8 -%}
+        {% assign largest_font = include.params.largest | default: 22 -%}
+        {% assign unit = include.params.unit | default: "pt" -%}
+
+        {% comment -%}Get sorted tag sizes{% endcomment -%}
+        {% assign tag_archive_settings = site.taxonomies.tag.settings.archive -%}
+        {% include dynamo function="get_posts" 
+            post_collection=tag_archive_settings.post_collection 
+            where_exp=tag_archive_settings.where_exp 
+            locale=include.params.locale -%}
+        {% assign taxonomy_field = tag_archive_settings.taxonomy_field | default: "tags" -%}
+        {% assign tag_names = tags | map: "name" -%}
+        {% assign nonempty_tags = posts | map: taxonomy_field | 
+            join: "," | join: "," | split: "," | group_by_exp: "item", "item" |
+            where_exp: "tag", "tag_names contains tag.name" | 
+            sort: "size" | reverse -%}
+
+        {% comment -%}Figure out the max size, the min size, the nonempty tags that must 
+        be rendered, and the number of empty tags to render.{% endcomment -%}
+        {% if nonempty_tags.size > 0 -%}
+            {% assign max_size = nonempty_tags[0].size | default: 0 -%}
+
+            {% if num_of_tags > 0 and nonempty_tags.size > num_of_tags -%}
+                {% comment -%}If the number of tags to display is less than the number of 
+                nonempty tags, let's make sure that the top nonempty tags get rendered.
+                {% endcomment -%}
+                {% assign tags_must_render = EMPTY_ARRAY -%}
+                {% assign c = 0 -%}
+                {% for nonempty_tag in nonempty_tags -%}
+                    {% assign tags_must_render = tags_must_render | push: nonempty_tag.name -%}
+                    {% assign c = c | plus: 1 -%}
+                    {% if c == num_of_tags -%}
+                        {% assign min_size = nonempty_tag.size -%}
+                        {% break -%}
+                    {% endif -%}
+                {% endfor -%}
+                {% assign num_of_empty_tags_to_render = 0 -%}
+            {% elsif tags.size == nonempty_tags.size or 
+                num_of_tags == nonempty_tags.size or 
+                include.params.hide_empty == true -%}
+                {% comment -%}Else if none of the tags is empty or the number of tags to 
+                display equals the number of nonempty tags, or we need to hide empty tags, 
+                let's display all nonempty tags.{% endcomment -%}
+                {% assign tags_must_render = nonempty_tags | map: "name" -%}
+                {% assign min_size = nonempty_tags | last -%}
+                {% assign min_size = min_size.size -%}
+                {% assign num_of_empty_tags_to_render = 0 -%}
+            {% else -%}
+                {% comment -%}In other cases (there are more tags to render than nonempty 
+                tags), let's make sure all nonempty tags get rendered.{% endcomment -%}
+                {% assign tags_must_render = nonempty_tags | map: "name" -%}
+                {% assign min_size = 0 -%}
+                {% if num_of_tags < 0 or num_of_tags >= tags.size -%}
+                    {% comment -%}Display all empty tags.{% endcomment -%}
+                    {% assign num_of_empty_tags_to_render = -1 -%}
+                {% else -%}
+                    {% assign num_of_empty_tags_to_render = num_of_tags | minus: nonempty_tags.size -%}
+                {% endif -%}
+            {% endif -%}
+        {% else -%}
+            {% assign max_size = 0 -%}
+            {% assign min_size = 0 -%}
+            {% assign tags_must_render = EMPTY_ARRAY -%}
+        {% endif -%}
+
+        {% comment -%}Calculate the font spread and font step{% endcomment -%}
+        {% assign size_spread = max_size | minus: min_size -%}
+        {% if size_spread <= 0 -%}
+            {% assign size_spread = 1 -%}
+        {% endif -%}
+        {% assign font_spread = largest_font | minus: smallest_font -%}
+        {% if font_spread < 0 -%}
+            {% assign font_spread = 1 -%}
+        {% endif -%}
+        {% assign font_step = font_spread | divided_by: size_spread -%}
+
+        {% comment -%}Determine whether to output an 'aria-label' attribute with the tag name 
+        and count. When tags have a different font size, they visually convey an important 
+        information that should be available to assistive technologies too. On the other hand, 
+        sometimes themes set up the Tag Cloud to display all tags with the same font size 
+        (setting the 'smallest' and 'largest' arguments to the same value).  In order to 
+        always serve the same content to all users, the 'aria-label' gets printed out:
+        - when tags have a different size
+        - when the tag count is displayed (for example when users check the checkbox in the
+        Tag Cloud widget), regardless of the tags font size{% endcomment -%}
+        {% if include.params.show_size == true or font_spread > 0 -%}
+            {% assign show_aria_label = true -%}
+        {% else -%}
+            {% assign show_aria_label = false -%}
+        {% endif -%}
+
+        {% comment -%}Render the tag cloud{% endcomment -%}
+        {% assign c = 0 -%}
+        {% assign num_of_empty_tags_rendered = 0 -%}
+        
+        {% case include.params.format -%}
+
+{%- comment -%}'list' format{% endcomment -%}
+{% when "list" -%}
+<ul class='{{ include.params.container_class | default: "tag-cloud" }}' role="list">
+    {% for tag in tags -%}
+        {% if num_of_tags > 0 -%}
+            {% if c >= num_of_tags -%}{% break -%}{% endif -%}
+            {% unless tags_must_render contains tag.name -%}
+                {% if num_of_empty_tags_to_render >= 0 and num_of_empty_tags_rendered >= num_of_empty_tags_to_render -%}
+                    {% continue -%}
+                {% endif -%}
+                {% assign num_of_empty_tags_rendered = num_of_empty_tags_rendered | plus: 1 -%}
+            {% endunless -%}
+        {% endif -%}
+
+        {% assign c = c | plus: 1 %}
+        {% assign tag_size = nonempty_tags | where: "name", tag.name | map: "size" | first | default: 0 -%}
+        {% assign font_size = tag_size | minus: min_size | times: font_step | plus: smallest_font -%}
+        
+    <li class='{{ include.params.item_class | default: "tag-item" }}'>
+        {% if include.params.render_tag_function -%}
+            {% include dynamo function=include.params.render_tag_function 
+                tag=tag 
+                size=tag_size 
+                indent_level=2 %}
+        {% else -%}
+        <a href='{{ tag.url }}' class="tag-cloud-link tag-link-{{ tag.name }}" style="font-size: {{ font_size }}{{ unit }};" 
+            {%- if show_aria_label == true %} aria-label="{{ tag.display_name | default: tag.name }} ({{ tag_size }})"{% endif -%}>
+            {{ include.params.before_link_text }}{{ tag.display_name | default: tag.name }}{{ include.params.after_link_text -}}
+            {% if include.params.show_size == true -%}
+                <span class="tag-size"> ({{ tag_size }})</span>
+            {%- endif %}
+        </a>
+        {%- endif %}
+    </li>
+    {%- endfor %}
+</ul>
+
+{%- comment -%}'flat' format{% endcomment -%}
+{% when "flat" -%}
+{% for tag in site.tags -%}
+    {% if num_of_tags > 0 -%}
+        {% if c >= num_of_tags -%}{% break -%}{% endif -%}
+        {% unless tags_must_render contains tag.name -%}
+            {% if num_of_empty_tags_to_render >= 0 and num_of_empty_tags_rendered >= num_of_empty_tags_to_render -%}
+                {% continue -%}
+            {% endif -%}
+            {% assign num_of_empty_tags_rendered = num_of_empty_tags_rendered | plus: 1 -%}
+        {% endunless -%}
+    {% endif -%}
+    
+    {% if c > 0 -%}{{ include.params.separator | default: " " }}{% endif -%}
+    {% assign c = c | plus: 1 %}
+    {% assign tag_size = nonempty_tags | where: "name", tag.name | map: "size" | first | default: 0 -%}
+    {% assign font_size = tag_size | minus: min_size | times: font_step | plus: smallest_font -%}
+
+    {% if include.params.render_tag_function -%}
+        {% include dynamo function=include.params.render_tag_function tag=tag size=tag_size %}
+    {% else -%}
+<a href='{{ tag.url }}' class="tag-cloud-link tag-link-{{ slug }}" style="font-size: {{ font_size }}{{ unit }};" 
+    {%- if aria_label == true %} aria-label="{{ tag.display_name | default: tag.name }} ({{ tag_size }})"{% endif -%}>
+    {{ include.params.before_link_text }}{{ tag.display_name | default: tag.name }}{{ include.params.after_link_text -}}
+    {% if include.params.show_size == true -%}
+        <span class="tag-size"> ({{ tag_size }})</span>
+    {%- endif %}
+</a>
+    {%- endif %}
+{% endfor -%}
+
+        {% endcase -%}
+    {% endif -%}
+{% endif -%}

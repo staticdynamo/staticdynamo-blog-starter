@@ -1,0 +1,38 @@
+{% comment -%}---------------------------------------------------------------------------
+Function: enable_heading_anchor
+
+Description: Append heading anchor to headings in the target container.
+
+Usage: 
+    {% include dynamo function="enable_heading_anchor" target_selector=".content" -%}
+
+Parameters:
+    * target_selector   (string) - jQuery selector of the target HTML to enable heading 
+                                   anchor.
+    * allowed_headings  (string) - Comma-delimited heading types to enable heading 
+                                   anchors.  Default: "h2,h3,h4,h5,h6".
+    * anchor_template   (string) - The HTML template for the appended heading anchors.
+                                   Use :heading_id as placeholder for the heading id.  
+                                   Default: 
+    <a class='heading-anchor' tabindex='-1' aria-hidden='true' href='#:heading_id'>
+        <i class='fa fa-link'></i>
+    </a>
+-------------------------------------------------------------------------{% endcomment -%}
+
+{% assign allowed_headings = include.params.allowed_headings | default: "h2,h3,h4,h5,h6" -%}
+{% assign anchor_template = include.params.anchor_template | default: "<a class='heading-anchor' tabindex='-1' aria-hidden='true' href='#:heading_id'><i class='fa fa-link'></i></a>" -%}
+<script>
+(function(){
+    var container = document.querySelector("{{ include.params.target_selector }}");
+    if (container) {
+        var headings = Array.from(container.querySelectorAll("{{ allowed_headings }}"));
+        headings.forEach(function(heading) {
+            if (heading.id) {
+                var html = "{{ anchor_template }}";
+                html = html.replace(":heading_id", heading.id);
+                heading.insertAdjacentHTML("beforeend", html);
+            }
+        });
+    }
+})();
+</script>

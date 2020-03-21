@@ -1,0 +1,20 @@
+---
+layout: none
+locale: zh-cn
+permalink: /:path/chrome.zh-cn.js
+---
+
+{% include dynamo function="define_web_component"
+    name="twentyseventeen-header"
+    html_file="_includes/header.html"
+    use_shadow_dom=false %}
+
+{% include dynamo function="define_web_component"
+    name="twentyseventeen-footer"
+    html_file="_includes/footer.html"
+    use_shadow_dom=false %}
+
+{% include dynamo function="define_web_component"
+    name="twentyseventeen-sidebar"
+    html_file="_includes/sidebar.html"
+    use_shadow_dom=false %}

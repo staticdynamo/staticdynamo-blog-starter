@@ -1,0 +1,105 @@
+{% comment -%}---------------------------------------------------------------------------
+Function: enqueue_script
+
+Description: Enqueue the script(s) for jquery, bootstrap, search, site TOC, and analytics.
+
+Usage:
+    {% include dynamo function="enqueue_script" for="jquery" major_version="3" -%}
+
+Parameters:
+    * for (string)   : can be one of the following values
+                     - "jquery"
+                     - "bootstrap"
+                     - "webcomponents"
+                     - "search"
+                     - "analytics"
+
+------------------------------------------------------------------------{% endcomment -%}
+
+{% case include.params.for -%}
+    {% when "dynamo" -%}
+    {% unless ENQUEUED_SCRIPTS contains "dynamo" -%}
+        {% assign ENQUEUED_SCRIPTS = ENQUEUED_SCRIPTS | push: "dynamo" -%}
+<script src="{{ SYSTEM_DIRECTORY_URL }}/js/dynamo-1.0.2.js"></script>
+    {% endunless -%}
+
+    {% comment -%}Enqueue jQuery.js{% endcomment -%}
+    {% when "jquery" -%}
+    {% unless ENQUEUED_SCRIPTS contains "jquery" -%}
+        {% assign ENQUEUED_SCRIPTS = ENQUEUED_SCRIPTS | push: "jquery" -%}
+        {% case include.params.major_version -%}
+            {% when "3" -%}{% assign jquery_version = "3.3.1" -%}
+            {% when "2" -%}{% assign jquery_version = "2.2.4" -%}
+            {% when "1" -%}{% assign jquery_version = "1.12.4" -%}
+            {% else -%}{% assign jquery_version = site.jquery_version | default: "3.3.1" -%}
+        {% endcase -%}
+        {% capture jquery_dist -%}
+            <script src="{{ SYSTEM_DIRECTORY_URL }}/lib/jquery/{{ jquery_version }}/dist/jquery.min.js"></script>
+        {%- endcapture -%}
+        {% if jekyll.environment == 'development' or include.params.from_local == true -%}
+{{ jquery_dist }}
+        {% else -%}
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/{{ jquery_version }}/jquery.min.js" crossorigin="anonymous"></script>
+<script>(window.jQuery || document.write('{{ jquery_dist | replace: "/", "\/" }}'));</script>
+        {%- endif -%}
+    {% endunless -%}
+
+    {% comment -%}Enqueue Bootstrap.js{% endcomment -%}
+    {% when "bootstrap" -%}
+    {% unless ENQUEUED_SCRIPTS contains "bootstrap" -%}
+        {% assign ENQUEUED_SCRIPTS = ENQUEUED_SCRIPTS | push: "bootstrap" -%}
+        {% case include.params.major_version -%}
+            {% when "3" -%}{% assign bootstrap_version = "3.3.7" -%}
+            {% when "4" -%}{% assign bootstrap_version = "4.4.1" -%}
+            {% else -%}{% assign bootstrap_version = "3.3.7" -%}
+        {% endcase -%}
+        {% capture bootstrap_dist -%}
+            <script src="{{ SYSTEM_DIRECTORY_URL }}/lib/bootstrap/{{ bootstrap_version }}/dist/js/bootstrap.min.js"></script>
+        {%- endcapture -%}
+        {% if jekyll.environment == 'development' or include.params.from_local == true -%}
+{{ bootstrap_dist }}
+        {% else -%}
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/{{ bootstrap_version }}/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+<script>if (typeof($.fn.modal) === 'undefined') { document.write('{{ bootstrap_dist | replace: "/", "\/" }}'); }</script>
+        {%- endif -%}
+    {% endunless -%}
+
+    {% comment -%}Enqueue WebComponents.js{% endcomment -%}
+    {% when "webcomponents" -%}
+    {% unless ENQUEUED_SCRIPTS contains "webcomponents" -%}
+        {% assign ENQUEUED_SCRIPTS = ENQUEUED_SCRIPTS | push: "webcomponents" -%}
+        {% if jekyll.environment == 'development' or include.params.from_local == true -%}
+<script type='text/javascript' src='{{ SYSTEM_DIRECTORY_URL }}/lib/webcomponents/2.1.3/webcomponents-loader.js'></script>
+        {% else -%}
+<script src="https://unpkg.com/@webcomponents/webcomponentsjs@2.1.3/webcomponents-loader.js"></script>
+        {%- endif -%}
+    {% endunless -%}
+
+    {% comment -%}Enqueue Search Script{% endcomment -%}
+    {% when "search" -%}
+    {% unless ENQUEUED_SCRIPTS contains "search" -%}
+        {% assign ENQUEUED_SCRIPTS = ENQUEUED_SCRIPTS | push: "search" -%}
+        {% for plugin_hash in site.search -%}
+            {% assign search_plugin_name = plugin_hash[0] -%}
+            {% assign search_plugin = plugin_hash[1] -%}
+            {% if search_plugin.enabled -%}
+                {% include dynamo function="load_plugin" plugin=search_plugin_name category="search" -%}
+                {% break -%}
+            {% endif -%}
+        {% endfor -%}
+    {% endunless -%}
+
+    {% comment -%}Enqueue Web Analytics Script{% endcomment -%}
+    {% when "analytics" -%}
+    {% unless ENQUEUED_SCRIPTS contains "analytics" -%}
+        {% assign ENQUEUED_SCRIPTS = ENQUEUED_SCRIPTS | push: "analytics" -%}
+        {% for plugin_hash in site.analytics -%}
+            {% assign analytics_plugin_name = plugin_hash[0] -%}
+            {% assign analytics_plugin = plugin_hash[1] -%}
+            {% if analytics_plugin.enabled -%}
+                {% include dynamo function="load_plugin" plugin=analytics_plugin_name category="analytics" -%}
+            {% endif -%}
+        {% endfor -%}
+    {% endunless -%}
+
+{% endcase -%}

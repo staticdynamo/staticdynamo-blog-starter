@@ -1,0 +1,134 @@
+{% comment -%}---------------------------------------------------------------------------
+Function: compress_html
+
+Description: Compress the given HTML content
+
+Usage: 
+    {% include dynamo function="compress_html" html="..." -%}
+
+Parameters:
+    * html              (string) - HTML content to compress
+    * endings           (string) - Space-delimited optional end tags to remove from the 
+                                   HTML.  Default: no end tag is removed.  If endings 
+                                   equals "all", all optional end tags will be removed.
+    * startings         (string) - Space-delimited optional start tags to remove from the 
+                                   HTML.  Default: no start tag is removed.
+    * comments          (string) - Space-delimited exactly two comment tags to strip 
+                                   comments enclosed by them.  The first string must be 
+                                   the start tag, and the second tag must be the end tag. 
+                                   Default: no comment is removed.  If comments equals 
+                                   "all", all comments will be removed. 
+    * blanklines        (bool)   - A boolean value to turn on blanklines mode. This mode 
+                                   will only remove lines consisting of whitespace and 
+                                   leave other lines alone. Default: false.
+    * clippings         (string) - Space-delimited html tags to clip whitespace around 
+                                   them.  If clippings equals "all", whitespace around 
+                                   all safe html elements will be clipped. 
+-------------------------------------------------------------------------{% endcomment -%}
+
+{% comment -%}Initialization{% endcomment -%}
+{% capture html -%}{{ include.params.html }}{% endcapture -%}
+
+{% comment -%}Remove end tags{% endcomment -%}
+{% if include.params.endings -%}
+    {% if include.params.endings == "all" -%}
+        {% assign endings = "html head body li dt dd optgroup option colgroup caption thead tbody tfoot tr td th" | split: " " -%}
+    {% else -%}
+        {% assign endings = include.params.endings | split: " " -%}
+    {% endif -%}
+    {% for element in endings -%}
+        {% capture end -%}</{{ element }}>{%- endcapture -%}
+        {% assign html = html | remove: end -%}
+    {% endfor -%}
+{% endif -%}
+
+{% comment -%}Remove start tags{% endcomment -%}
+{% if include.params.startings -%}
+    {% assign startings = include.params.startings | split: " " -%}
+    {% for element in startings -%}
+        {% capture start -%}<{{ element }}>{%- endcapture -%}
+        {% assign html = html | remove: start -%}
+    {% endfor -%}
+{% endif -%}
+
+{% comment -%}Remove comments{%- endcomment -%}
+{% if include.params.comments -%}
+    {% if include.params.comments == "all" -%}
+        {% assign comments = "<!-- -->" | split: " " -%}
+    {% else -%}
+        {% assign comments = include.params.comments | split: " " -%}
+    {% endif -%}
+    {% if comments.size == 2 -%}
+        {% capture comment_befores -%}.{{ html }}{%- endcapture -%}
+        {% assign comment_befores = comment_befores | split: comments.first -%}
+        {% for comment_before in comment_befores -%}
+            {% if forloop.first -%}
+                {% continue -%}
+            {% endif -%}
+            {% capture comment_outside -%}
+                {% if carry -%}{{ comments.first }}{% endif -%}
+                {{ comment_before -}}
+            {%- endcapture -%}
+            {% capture comment -%}
+                {% unless carry -%}{{ comments.first }}{% endunless -%}
+                {{ comment_outside | split: comments.last | first -}}
+                {% if comment_outside contains comments.last -%}
+                    {{ comments.last -}}
+                    {% assign carry = false -%}
+                {% else -%}
+                    {% assign carry = true -%}
+                {% endif -%}
+            {%- endcapture -%}
+            {% assign html = html | remove_first: comment -%}
+        {% endfor -%}
+    {% endif -%}
+{% endif -%}
+
+{% comment -%}Collapse whitespace outside of <pre>{% endcomment -%}
+{% assign pre_befores = html | split: "<pre" -%}
+{% assign html = "" -%}
+{% for pre_before in pre_befores -%}
+    {% assign pres = pre_before | split: "</pre>" -%}
+    {% assign pres_after = "" -%}
+
+    {% if pres.size != 0 -%}
+        {% if include.params.blanklines == true -%}
+            {% assign lines = pres.last | split: LINE_FEED -%}
+            {% capture pres_after -%}
+                {% for line in lines -%}
+                    {% assign trimmed = line | split: " " | join: " " -%}
+                    {% if trimmed != empty or forloop.last -%}
+                        {% unless forloop.first -%}
+                            {{ LINE_FEED -}}
+                        {%- endunless -%}
+                        {{ line -}}
+                    {% endif -%}
+                {% endfor -%}
+            {%- endcapture -%}
+        {% else -%}
+            {% assign pres_after = pres.last | split: " " | join: " " -%}
+        {% endif -%}
+    {% endif -%}
+
+    {% capture html -%}
+        {{ html -}}
+        {% if pre_before contains "</pre>" -%}<pre{{ pres.first }}</pre>{% endif -%}
+        {% unless pre_before contains "</pre>" and pres.size == 1 -%}{{ pres_after }}{% endunless -%}
+    {%- endcapture -%}
+{% endfor -%}
+
+{% comment -%}Clip whitespace around elements{% endcomment -%}
+{% if include.params.clippings -%}
+    {% if include.params.clippings == "all" -%}
+        {% assign clippings = "html head title base link meta style body article section nav aside h1 h2 h3 h4 h5 h6 hgroup header footer address p hr blockquote ol ul li dl dt dd figure figcaption main div table caption colgroup col tbody thead tfoot tr td th use svg" | split: " " -%}
+    {% else -%}
+        {% assign clippings = include.params.clippings | split: " " -%}
+    {% endif -%}
+    {% for element in clippings -%}
+        {% assign edges = " <e;<e; </e>;</e>;</e> ;</e>" | replace: "e", element | split: ";" -%}
+        {% assign html = html | replace: edges[0], edges[1] | replace: edges[2], edges[3] | replace: edges[4], edges[5] -%}
+    {% endfor -%}
+{% endif -%}
+
+{% comment -%}Output{% endcomment -%}
+{{ html -}}

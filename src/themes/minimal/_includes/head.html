@@ -1,0 +1,14 @@
+{%- comment -%}--------------------------------------------------------------------------
+Always have {% include dynamo file="_includes/head.html" mode="inclusive" %} at the
+beginning of the <head> tag of your layout.  You generally use this partial to add
+elements to <head> such as styles, scripts, and meta tags.
+-----------------------------------------------------------------------{%- endcomment -%}
+
+<!-- begin theme head -->
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel='stylesheet' href='{{ THEME_DIRECTORY_URL }}/css/style.css' type='text/css' media='all' />
+<!--[if lt IE 9]>
+<script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv.min.js"></script>
+<![endif]-->
+<!-- end theme head -->

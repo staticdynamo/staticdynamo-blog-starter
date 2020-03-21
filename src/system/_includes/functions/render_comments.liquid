@@ -1,0 +1,24 @@
+{% comment -%}---------------------------------------------------------------------------
+Function: render_comments
+
+Description: Displays all comments for a post or page, depending on if the comments 
+    function is enabled in it.  By default, the comments function is enabled in all posts
+    and disabled in all pages.  But you can change it in _config.yml. 
+
+Usage:
+    {% include dynamo function="render_comments" -%}
+------------------------------------------------------------------------{% endcomment -%}
+
+{% if page.comments.enabled -%}
+    {% comment -%}Load the first enabled comments plugin{% endcomment -%}
+    {% for plugin_hash in site.comments -%}
+        {% assign comments_plugin_name = plugin_hash[0] -%}
+        {% assign comments_plugin = plugin_hash[1] -%}
+        {% if comments_plugin.enabled -%}
+<div id="comments" class="comments-area">
+    {% include dynamo function="load_plugin" plugin=comments_plugin_name category="comments" indent_level=1 %}
+</div><!-- #comments -->
+            {% break -%}
+        {% endif -%}
+    {% endfor -%}
+{% endif -%}

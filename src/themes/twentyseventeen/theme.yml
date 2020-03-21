@@ -1,0 +1,32 @@
+# This theme was originally developed for WordPress: 
+# https://wordpress.org/themes/twentyseventeen/
+# It is ported to StaticDynamo. 
+# Use it to make something cool, have fun, and share what you've learned with others.
+name: Twenty Seventeen
+uid: twentyseventeen
+uri: 
+description: >
+  Twenty Seventeen brings your site to life with header video and immersive featured images. 
+  With a focus on business sites, it features multiple sections on the front page as well 
+  as widgets, navigation and social menus, a logo, and more. Personalize its asymmetrical 
+  grid with a custom color scheme and showcase your multimedia content with post formats. 
+  Our default theme for 2017 works great in many languages, for any abilities, and on any 
+  device.
+version: 1.7
+license:
+  name: GNU General Public License v2 or later
+  uri: http://www.gnu.org/licenses/gpl-2.0.html
+Text Domain: twentyseventeen
+tags: 
+  - blog
+  - accessibility-ready
+  - one-column
+  - two-columns
+  - right-sidebar
+  - custom-header
+  - custom-logo
+  - custom-menu
+  - featured-images
+  - flexible-header
+  - footer-widgets
+  - rtl-language-support

@@ -1,0 +1,8 @@
+- widget: text
+  settings:
+    title: About This Site
+    content: >
+      This may be a good place to introduce yourself and your site or include some credits.
+- widget: search
+  settings:
+    title: Search

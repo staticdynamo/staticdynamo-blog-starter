@@ -1,0 +1,17 @@
+{% comment -%}---------------------------------------------------------------------------
+Function: enable_web_component
+
+Description: Enabe the given Web Component.  The function also enqueues webcomponents
+    polyfills if they have not been.
+
+Usage:
+    {% include dynamo function="enable_web_component" src="???.js" -%}
+
+Parameters:
+    * src           (string) - Url of the web component
+------------------------------------------------------------------------{% endcomment -%}
+
+{% include dynamo function="enqueue_script" for="webcomponents" major_version="2" %}
+{% if include.params.src -%}
+<script type="module" src="{{ include.params.src }}"></script>
+{% endif -%}

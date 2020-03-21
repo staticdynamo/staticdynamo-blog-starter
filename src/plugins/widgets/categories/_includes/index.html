@@ -1,0 +1,17 @@
+{% comment -%}---------------------------------------------------------------------------
+Widget: Categories
+The widget title is not displayed is the category list is empty.
+------------------------------------------------------------------------{% endcomment -%}
+
+{% comment -%}Extract settings from include.params.settings{% endcomment -%}
+{% assign show_size = include.params.settings.show_size | default: true -%}
+{% assign widget_categories_unique_id = UNIQUE_ID | prepend: "categories-" -%}
+<section id="{{ widget_categories_unique_id }}" class="widget widget_categories">
+    <h2 class="widget-title">{{ include.params.settings.title | default: STRING__CATEGORIES }}</h2>
+    {% include dynamo function="render_categories" 
+        format="list" 
+        show_size=show_size 
+        order_by="size"
+        order="DESC"
+        indent_level=1 %}
+</section>

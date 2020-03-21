@@ -1,0 +1,62 @@
+{% comment -%}---------------------------------------------------------------------------
+Function: get_config
+
+Usage: 
+    {% include dynamo function="get_config" of="site" key="title" -%}
+    The above code gets the site title from locale config and site config. 
+
+Parameters:
+    * of                    (string) - "site" or "theme".  Default: "site"
+    * key                   (string) - Config key
+    * default_value         (string) - Default value if the key is not available.
+    * locale                (string) - Optional locale info
+
+------------------------------------------------------------------------{% endcomment -%}
+
+{% assign config = nil -%}
+{% if include.params.key -%}
+    {% assign keys = include.params.key | split: "." -%}
+
+    {% comment -%}Check locale config{% endcomment -%}
+    {% assign locale = include.params.locale | default: CURRENT_LOCALE -%}
+    {% if locale and site.data[locale].config -%}
+        {% for key in keys -%}
+            {% if forloop.first -%}
+                {% if include.params.of == "theme" -%}
+                    {% assign config = site.data[locale].config.themes[site.themes.active][key] -%}
+                {% else -%}
+                    {% assign config = site.data[locale].config[key] -%}
+                {% endif -%}
+            {% else -%}
+                {% assign config = config[key] -%}
+            {% endif -%}
+
+            {% unless config -%}
+                {% break -%}
+            {% endunless -%}
+        {% endfor -%}
+    {% endif -%}
+
+    {% comment -%}If locale config is not available, check site config{% endcomment -%}
+    {% unless config -%}
+        {% for key in keys -%}
+            {% if forloop.first -%}
+                {% if include.params.of == "theme" -%}
+                    {% assign config = site.themes[site.themes.active][key] -%}
+                {% else -%}
+                    {% assign config = site[key] -%}
+                {% endif -%}
+            {% else -%}
+                {% assign config = config[key] -%}
+            {% endif -%}
+
+            {% unless config -%}
+                {% break -%}
+            {% endunless -%}
+        {% endfor -%}
+    {% endunless -%}
+{% endif -%}
+
+{% if config == nil and include.params.default_value -%}
+    {% assign config = include.params.default_value -%}
+{% endif -%}

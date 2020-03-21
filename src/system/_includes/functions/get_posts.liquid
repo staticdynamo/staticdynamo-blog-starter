@@ -1,0 +1,46 @@
+{% comment -%}---------------------------------------------------------------------------
+Function: get_posts
+
+Description: Query and get posts
+
+Parameters:
+    * post_collection       (string) - Name of the post collection.  Default: "posts"
+    * enable_pagination     (bool)   - Whether to enable pagination when getting posts or 
+                                       not.  It works only when collection is "posts". 
+                                       Default: false. 
+    * where_exp             (string) - Filter the posts based on the given where exp. 
+                                       In the where_exp, use 'item' to refer to the post 
+                                       object. 
+    * locale                (string) - Locale of the posts to get. 
+                                       Default: CURRENT_LOCALE. If locale equals 
+                                       site.locale, get all site posts; otherwise, get 
+                                       posts of the given locale.
+    * order_by              (string) - Specify the post property to order the posts.
+    * order                 (string) - "ASC" or "DESC". The parameter is valid only when 
+                                       order_by is provided.
+------------------------------------------------------------------------{% endcomment -%}
+
+{% assign post_collection = include.params.post_collection | default: "posts" -%}
+
+{% if post_collection == "posts" and include.params.enable_pagination == true -%}
+    {% assign posts = paginator.posts -%}
+{% else -%}
+    {% assign posts = site[post_collection] -%}
+{% endif -%}
+
+{% if include.params.where_exp -%}
+    {% assign posts = posts | where_exp: "item", include.params.where_exp -%}
+{% endif -%}
+
+{% assign locale = include.params.locale | default: CURRENT_LOCALE -%}
+{% if locale and locale != site.locale -%}
+    {% assign posts = posts | where: "locale", locale -%}
+{% endif -%}
+
+{% if include.params.order_by -%}
+    {% if include.params.order == "DESC" -%}
+        {% assign posts = posts | sort: include.params.order_by | reverse -%}
+    {% else -%}
+        {% assign posts = posts | sort: include.params.order_by -%}
+    {% endif -%}
+{% endif -%}

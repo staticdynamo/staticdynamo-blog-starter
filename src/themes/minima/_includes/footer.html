@@ -1,0 +1,38 @@
+<footer class="site-footer h-card">
+    <data class="u-url" href='{{ HOME_URL }}'></data>
+    <div class="wrapper">
+        <h2 class="footer-heading">{{ SITE_TITLE | escape }}</h2>
+        <div class="footer-col-wrapper">
+            <div class="footer-col footer-col-1">
+                <ul class="contact-list">
+                    <li class="p-name">
+                        {% if site.author -%}
+                            {{ site.author | escape -}}
+                        {% else -%}
+                            {{ SITE_TITLE | escape -}}
+                        {%- endif %}
+                    </li>
+                    {% if site.email -%}
+                    <li>
+                        <a class="u-email" href="mailto:{{ site.email }}">{{ site.email }}</a>
+                    </li>
+                    {%- endif -%}
+                </ul>
+            </div>
+            <div class="footer-col footer-col-2">
+                {% include dynamo function="get_config" of="theme" key="footer.social_links" -%}
+                {% if config -%}
+                    {% include dynamo function="render_navigation" 
+                        nav=config 
+                        nav_class="social-media-list"
+                        format="list" 
+                        render_link_text_function="render_social_link_title" 
+                        indent_level=4 %}
+                {% endif -%}
+            </div>
+            <div class="footer-col footer-col-3">
+                <p>{{ SITE_DESCRIPTION | escape -}}</p>
+            </div>
+        </div>
+    </div>
+</footer>

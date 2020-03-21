@@ -1,0 +1,11 @@
+{%- comment -%}--------------------------------------------------------------------------
+This file allows you to offer custom strings or overwrite any of the system/theme strings
+based on the given locale.
+-----------------------------------------------------------------------{%- endcomment -%}
+
+{% case include.locale | downcase -%}
+
+    {% when "certain locale e.g. en-us" -%}
+        {% assign string_var = "certain value" -%}
+
+{% endcase -%}

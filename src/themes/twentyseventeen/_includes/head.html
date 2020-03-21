@@ -1,0 +1,22 @@
+{%- comment -%}--------------------------------------------------------------------------
+Always have {% include dynamo file="_includes/head.html" mode="inclusive" %} at the
+beginning of the <head> tag of your layout.  You generally use this partial to add
+elements to <head> such as styles, scripts, and meta tags.
+-----------------------------------------------------------------------{%- endcomment -%}
+
+<!-- begin theme head -->
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="profile" href="http://gmpg.org/xfn/11">
+<link rel='stylesheet' href='https://fonts.googleapis.com/css?family=Libre+Franklin%3A300%2C300i%2C400%2C400i%2C600%2C600i%2C800%2C800i&#038;subset=latin%2Clatin-ext' type='text/css' media='all' />
+<link rel='stylesheet' href='{{ THEME_DIRECTORY_URL }}/css/style.css' type='text/css' media='all' />
+<!--[if lt IE 9]>
+<link rel='stylesheet' href='{{ THEME_DIRECTORY_URL }}/css/ie8.css?ver=1.0' type='text/css' media='all' />
+<![endif]-->
+<!--[if lt IE 9]>
+<script type='text/javascript' src='{{ THEME_DIRECTORY_URL }}/js/html5.js?ver=3.7.3'></script>
+<![endif]-->
+{% if THEME_USE_WEB_COMPONENT == true -%}
+    {% capture chrome_src -%}{{ THEME_DIRECTORY_URL }}/webcomponents/chrome{% if page.locale %}.{{ page.locale }}{% endif %}.js{%- endcapture -%}
+    {% include dynamo function="enable_web_component" src=chrome_src %}
+{% endif -%}
+<!-- end theme head -->

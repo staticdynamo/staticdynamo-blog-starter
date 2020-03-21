@@ -1,0 +1,29 @@
+{% comment -%}---------------------------------------------------------------------------
+Function: render_sidebar
+
+Description: Displays a sidebar with a list of widgets.
+
+Parameters:
+    * sidebar                   (string) - The name of the sidebar
+                             or (array)  - An array of widgets to display
+    * locale                    (string) - Locale of the sidebar for multilingual site. 
+                                           Default: $locale
+------------------------------------------------------------------------{% endcomment -%}
+
+{% if include.params.sidebar -%}
+    {% if include.params.sidebar.first -%}
+        {% assign widgets = include.params.sidebar -%}
+    {% else -%}
+        {% assign locale = include.params.locale | default: CURRENT_LOCALE | downcase -%}
+        {% if locale and site.data[locale].sidebars[include.params.sidebar] -%}
+            {% assign widgets = site.data[locale].sidebars[include.params.sidebar] -%}
+        {% else -%}
+            {% assign widgets = site.data.sidebars[include.params.sidebar] -%}
+        {% endif -%}
+    {% endif -%}
+    {% if widgets -%}
+        {% for widget in widgets -%}
+            {% include dynamo function="load_plugin" plugin=widget.widget category="widgets" from=widget.from settings=widget.settings %}{{ LINE_FEED -}}
+        {% endfor -%}
+    {% endif -%}
+{% endif -%}

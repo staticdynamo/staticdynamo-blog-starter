@@ -1,0 +1,48 @@
+{% if page.title -%}
+    {% assign og_title = page.title | append: " - " | append: SITE_TITLE -%}
+{% else -%}
+    {% assign og_title = SITE_TITLE -%}
+{% endif -%}
+
+{% if page.og.type -%}
+    {% assign og_type = page.og.type -%}
+{% else -%}
+    {% case page.layout -%}
+        {% when "post" -%}
+        {% assign og_type = "article" -%}
+        {% when "doc" -%}
+        {% assign og_type = "article" -%}
+
+        {% when "profile" -%}
+        {% assign og_type = "profile" -%}
+
+        {% when "book" -%}
+        {% assign og_type = "book" -%}
+        
+        {% else -%}
+        {% assign og_type = "website" -%}
+    {% endcase -%}
+{% endif -%}
+
+{% capture og_updated_time -%}
+    {%- if page.date -%}
+        {{ page.date | date_to_xmlschema }}
+    {%- else -%}
+        {{ site.time | date_to_xmlschema }}
+    {%- endif -%}
+{%- endcapture -%}
+
+{% if page.featured_image -%}
+    {% assign og_image = page.featured_image -%}
+{% else -%}
+    {% assign og_image = site.favicon | default: "/favicon.ico" -%}
+{% endif -%}
+<!-- open graph -->
+<meta property="og:title" content="{{ og_title }}" />
+<meta property="og:locale" content="{{ site.locale | replace: '-', '_' }}" />
+<meta property="og:description" content="{{ page.excerpt | default: SITE_DESCRIPTION | strip_html | normalize_whitespace | strip }}" />
+<meta property="og:type" content="{{ og_type }}" />
+<meta property="og:url" content="{{ page.url | absolute_url }}" />
+<meta property="og:updated_time" itemprop="dateUpdated" content="{{ og_updated_time }}" />
+<meta property="og:image" content="{{ og_image }}" />
+<meta property="og:site_name" content="{{ SITE_TITLE }}" />

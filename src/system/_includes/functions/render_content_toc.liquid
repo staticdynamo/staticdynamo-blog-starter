@@ -1,0 +1,110 @@
+{% comment -%}---------------------------------------------------------------------------
+Function: render_content_toc
+
+Description: Displays a TOC based on the given html content.
+
+Usage:
+    {% include dynamo function="render_content_toc" content=content sanitize=true 
+        class="inline_toc" id="toc" min_h=2 max_h=3 page_url=page.url -%}
+
+Parameters:
+    * content           (string) - The HTML of compiled markdown
+    * sanitize          (bool)   - When set to true, strip html from TOC header. 
+                                   Default: true
+    * scroll_highlight  (bool)   - When set to true, the corresponding heading in TOC 
+                                   gets highlighted when user scrolls the content.  
+                                   Default: false
+    * toc_id            (string) - ID assigned to the TOC top-level ul element. 
+                                   Default: 'toc-{unique id}'
+    * toc_class         (string) - CSS class assigned to the TOC top-level ul element. 
+                                   Default: 'toc'
+    * container         (string) - Whether and What to wrap the ul. Default 'div'.
+                                   If container = "", no container will wrap the ul.
+    * container_id      (string) - The ID that is applied to the container.
+                                   Default: 'toc-container-{ unique id }
+    * container_class   (string) - Class that is applied to the container.
+                                   Default: 'toc-container'.
+    * min_h             (int)    - The minimum TOC heading level to use; any heading 
+                                   lower than this value will be ignored. Default: 1
+    * max_h             (int)    - The maximum TOC heading level to use; any heading
+                                   greater than this value will be ignored. 
+                                   Default: 6
+    * page_url          (string) - The url of the page
+
+Output:
+    An unordered list representing the table of contents of a markdown block. This 
+    snippet will only generate the table of contents and will NOT output the 
+    markdown given to it.
+------------------------------------------------------------------------{% endcomment -%}
+
+{% capture default_toc_id -%}toc-{{ UNIQUE_ID }}{%- endcapture -%}
+{% assign toc_id = include.params.toc_id | default: default_toc_id -%}
+{% capture default_container_id -%}toc-container-{{ UNIQUE_ID }}{%- endcapture -%}
+{% assign container_id = include.params.container_id | default: default_container_id -%}
+{% capture toc_workspace -%}
+    {% capture toc -%}{%- endcapture -%}
+    {% assign min_header = include.params.min_h | default: 2 -%}
+    {% assign max_header = include.params.max_h | default: 3 -%}
+    {% assign page_url = include.params.page_url | default: "" -%}
+    {% assign sanitize = include.params.sanitize | default: true -%}
+    {% assign nodes = include.params.content | split: '<h' -%}
+
+    {% for node in nodes | offset: 1 -%}
+        {% if node == "" -%}
+            {% continue -%}
+        {% endif -%}
+        
+        {% assign header_level = node | replace: '"', '' | slice: 0, 1 -%}
+        {% assign header_level = header_level | times: 1 -%}
+        {% assign indentAmount = header_level | minus: min_header | add: 1 -%}
+        {% assign workspace = node | split: '</h' -%}
+
+        {% unless header_level >= min_header -%}
+            {% continue -%}
+        {% endunless -%}
+
+        {% if header_level > max_header -%}
+            {% continue -%}
+        {% endif -%}
+
+        {% assign id_workspace = workspace[0] | split: '"' -%}
+        {% assign anchor = id_workspace[1] -%}
+
+        {% capture h_attr_to_strip -%}{{ header_level }} id="{{ anchor }}">{%- endcapture -%}
+        {% assign header = workspace[0] | replace: h_attr_to_strip, '' | remove_first: "1>" -%}
+
+        {% assign space = '' -%}
+        {% for i in (1..indentAmount) -%}
+            {% assign space = space | prepend: '  ' -%}
+        {% endfor -%}
+
+        {% capture toc -%}{{ toc }}
+{{ space }}- [{% if sanitize -%}{{ header | strip_html }}{% else -%}{{ header }}{% endif -%}]({{ page_url }}#{{ anchor }}){: class="nomunge" }{%- endcapture -%}
+
+    {% endfor -%}
+
+    {% capture toc -%}{:.{{ include.params.toc_class | default: "toc" }}}
+{{ toc | lstrip }}{%- endcapture -%}
+
+    {% capture toc -%}{: #{{ toc_id }}}
+{{ toc | lstrip }}{%- endcapture -%}
+
+{%- endcapture -%}{% assign toc_workspace = '' -%}
+{% unless include.params.container == "" -%}
+<{{ include.params.container | default: "div" }} id="{{ container_id }}" class="{{ include.params.container_class | default: 'toc-container' }}">
+{% endunless -%}
+    {% assign toc = toc | markdownify | strip -%}
+    {{ toc }}
+{% unless include.params.container == "" -%}
+</{{ include.params.container | default: "div" }}>
+{% endunless -%}
+
+{% assign scroll_highlight = include.params.scroll_highlight | default: false -%}
+{% if scroll_highlight and toc != blank -%}
+<script>
+$(document).ready(function() {
+    var toc = new Dynamo.ContentTOC('{{ toc_id }}');
+    toc.enableScrollHighlight('active');
+});
+</script>
+{% endif -%}

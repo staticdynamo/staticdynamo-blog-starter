@@ -1,0 +1,213 @@
+{% comment -%}-------------------------------------------------------------------------------------
+Function: render_navigation
+
+Description: Displays a navigation menu, tree or list
+
+Parameters:
+    * format                        (string) - Display format of the navigation.  It can be one of
+                                               these values: tree / list / menu.
+    * nav                           (string) - the name of the navigation
+    * locale                        (string) - Locale of the navigation for multilingual site.
+                                               Default: $locale
+    * nav_id                        (string) - The ID that is applied to the ul element which forms
+                                               the navigation.
+    * nav_class                     (string) - CSS class to use for the top-level ul element which
+                                               forms the navigation. Default: "menu_bar" for menu nav,
+                                               "tree" for tree nav, "list" for list nav.
+    * expand_all_on_load            (bool)   - The flag indicates whether all navigation items are
+                                               expanded or not when loaded.  Default: false.
+    * child_nav_class               (string) - CSS class that is applied to the ul elements other
+                                               than the top-level ul element.  Default: 'sub-{format}'
+    * child_nav_expanded_class      (string) - CSS class that is applied to expanded navigation
+                                               items. Default: expanded.
+    * child_nav_collapsed_class     (string) - CSS class that is applied to collapsed navigation
+                                               items. Default: collapsed.
+    * depth                         (int)    - How many levels of the hierarchy are to be included.
+                                               Default 5.
+    * container                     (string) - Whether to wrap the ul, and what to wrap it with.
+                                               Default: 'div'.  If container = "", no container
+                                               will wrap the ul element.
+    * container_id                  (string) - The ID that is applied to the container.
+    * container_class               (string) - CSS class that is applied to the container.
+    * item_class                    (string) - CSS class that is applied to each navigation item
+                                               (li element). Default: '{format}-item'.
+    * current_item_class            (string) - Additional CSS class that is applied to the current
+                                               navigation item (li element).  Default: current-item
+    * current_item_ancestor_class   (string) - Additional CSS class that is applied to the ancestors
+                                               of the current navigation item (li element).
+                                               Default: current-item-ancestor
+    * item_has_children_class       (string) - Additional CSS class that is applied to the navigation
+                                               item (li element) containing children.
+                                               Default: item-has-children
+    * link_class                    (string) - CSS class that is applied to each link in navigation
+                                               item (a element).  Default: '{format}-item-link'
+    * current_link_class            (string) - Additional CSS class that is applied to the link of
+                                               the current navigation item (a element).
+                                               Default: current-link
+    * current_link_ancestor_class   (string) - Additional CSS class that is applied to the ancestor
+                                               links of the current navigation item (a element).
+                                               Default: current-link-ancestor
+    * before_link                   (string) - Text before the link markup.
+    * after_link                    (string) - Text after the link markup.
+    * render_link_function          (string) - Filter the link display, which includes `before_link`,
+                                               the opening `<a>`, the nav item's title, the closing
+                                               `</a>`, and `after_link`.
+    * before_link_text              (string) - Text before the link text (nav item title).
+    * after_link_text               (string) - Text after the link text (nav item title).
+    * render_link_text_function     (string) - Filter the link text (nav item title) display.
+
+Output: The resulting HTML that renders the menu
+----------------------------------------------------------------------------------{% endcomment -%}
+
+{% if include.params.nav and include.params.format -%}
+    {% assign locale = include.params.locale | default: CURRENT_LOCALE | downcase -%}
+    {% if include.params.nav.first -%}
+        {% assign root_items = include.params.nav -%}
+    {% elsif locale and site.data[locale].navigations[include.params.nav] -%}
+        {% assign root_items = site.data[locale].navigations[include.params.nav] -%}
+    {% elsif site.data.navigations[include.params.nav] -%}
+        {% assign root_items = site.data.navigations[include.params.nav] -%}
+    {% else -%}
+        {% assign root_items = nil -%}
+    {% endif -%}
+
+    {% if root_items -%}
+
+    {% comment -%}Set up the default parameters{% endcomment -%}
+    {% assign default_nav_id = "nav-" | append: UNIQUE_ID -%}
+    {% assign nav_id = include.params.nav_id | default: default_nav_id -%}
+    {% case include.params.format -%}
+        {% when "menu" -%}
+            {% assign nav_role = "menu_bar" -%}
+            {% assign nav_class = include.params.nav_class | default: "menu_bar" -%}
+        {% when "tree" -%}
+            {% assign nav_role = "tree" -%}
+            {% assign nav_class = include.params.nav_class | default: "tree" -%}
+        {% when "list" -%}
+            {% assign nav_role = "list" -%}
+            {% assign nav_class = include.params.nav_class | default: "list" -%}
+    {% endcase -%}
+    {% assign expand_all_on_load = include.params.expand_all_on_load | default: false -%}
+    {% case include.params.format -%}
+        {% when "menu" -%}
+            {% assign child_nav_role = "" -%}
+            {% assign child_nav_class = include.params.child_nav_class | default: "sub-menu" -%}
+            {% assign child_nav_attributes = "" -%}
+        {% when "tree" -%}
+            {% assign child_nav_role = "group" -%}
+            {% assign child_nav_class = include.params.child_nav_class | default: "sub-tree" -%}
+            {% assign child_nav_attributes = "" -%}
+        {% when "list" -%}
+            {% assign child_nav_role = "" -%}
+            {% assign child_nav_class = include.params.child_nav_class | default: "sub-list" -%}
+            {% assign child_nav_attributes = "" -%}
+    {% endcase -%}
+    {% assign child_nav_expanded_class = include.params.child_nav_expanded_class | default: "expanded" -%}
+    {% assign child_nav_collapsed_class = include.params.child_nav_collapsed_class | default: "collapsed" -%}
+    {% case include.params.format -%}
+        {% when "menu" -%}
+            {% assign item_role = "menuitem" -%}
+            {% assign item_class = include.params.item_class | default: "menu-item" -%}
+            {% assign item_attributes = "" -%}
+            {% assign item_has_children_attributes = "" -%}
+        {% when "tree" -%}
+            {% assign item_role = "treeitem" -%}
+            {% assign item_class = include.params.item_class | default: "tree-item" -%}
+            {% assign item_attributes = "" -%}
+            {% capture item_has_children_attributes -%}
+            aria-expanded={% if expand_all_on_load -%}"true"{% else -%}"false"{% endif -%}
+            {%- endcapture -%}
+        {% when "list" -%}
+            {% assign item_role = "listitem" -%}
+            {% assign item_class = include.params.item_class | default: "list-item" -%}
+            {% assign item_attributes = "" -%}
+            {% assign item_has_children_attributes = "" -%}
+    {% endcase -%}
+    {% assign item_has_children_class = include.params.item_has_children_class | default: "item-has-children" -%}
+    {% assign current_item_class = include.params.current_item_class | default: "current-item" -%}
+    {% assign current_item_ancestor_class = include.params.current_item_ancestor_class | default: "current-item-ancestor" -%}
+    {% assign default_link_class = include.params.format | append: "-item-link" -%}
+    {% assign link_class = include.params.link_class | default: default_link_class -%}
+    {% assign current_link_class = include.params.current_link_class | default: "current-link" -%}
+    {% assign current_link_ancestor_class = include.params.current_link_ancestor_class | default: "current-link-ancestor" -%}
+    {% assign before_link = include.params.before_link -%}
+    {% assign after_link = include.params.after_link -%}
+    {% assign render_link_function = include.params.render_link_function -%}
+    {% assign before_link_text = include.params.before_link_text -%}
+    {% assign after_link_text = include.params.after_link_text -%}
+    {% assign render_link_text_function = include.params.render_link_text_function -%}
+
+    {% unless include.params.container == '' -%}
+<{{ include.params.container | default: "div" }}{% if include.params.container_class %} class="{{ include.params.container_class }}"{% endif %}{% if include.params.container_id %} id="{{ include.params.container_id }}"{% endif %}>
+    {% endunless -%}
+
+    <ul role="{{ nav_role }}" class="{{ include.params.nav_class | default: "nav" }}" id="{{ nav_id }}">
+        {% assign remaining_depth = include.params.depth | default: 5 -%}
+        {% include dynamo function="render_navigation" items=root_items depth=remaining_depth format=include.params.format %}
+    </ul>
+
+    {%- unless include.params.container == '' %}
+</{{ include.params.container | default: "div" }}>
+    {%- endunless %}
+<script>
+(function() {
+    var nav = new Dynamo.Navigation(
+        '{{ nav_id }}',  // nav id
+        '{{ include.params.format }}',  // nav format (menu/tree/list)
+        {{ expand_all_on_load }},  // expand all on load
+        '{{ item_class }}',  // nav item <li> class
+        '{{ current_item_class }}',  // current nav item class
+        '{{ current_item_ancestor_class }}',  // current nav item ancestor class
+        '{{ link_class }}',  // nav item link <a> class
+        '{{ current_link_class }}',  // current link class
+        '{{ current_link_ancestor_class }}',  // current link ancestor class
+        '{{ child_nav_class }}',  // child nav <ul> class
+        '{{ child_nav_expanded_class }}',  // child nav expanded class
+        '{{ child_nav_collapsed_class }}'  // child nav collapsed class
+        );
+    nav.markCurrentPage();
+}());
+</script>
+    {%- endif -%}
+{% endif -%}
+
+{% comment -%}Internal recursive call to render child nav items{% endcomment -%}
+{% if include.params.items and include.params.format -%}
+    {% for item in include.params.items -%}
+        {% if include.params.depth > 1 and item.children -%}
+            {% assign item_has_children = true -%}
+        {% else -%}
+            {% assign item_has_children = false -%}
+        {% endif %}
+        <li role="{{ item_role }}" class="{{ item_class }}{% if item_has_children %} {{ item_has_children_class }}{% endif %}
+            {%- if item.classes %} {{ item.classes }}{% endif %}"{% if item_attributes != blank %} {{ item_attributes }}{% endif %}
+            {%- if item_has_children and item_has_children_attributes != blank %} {{ item_has_children_attributes }}{% endif %}>
+            {% capture link -%}
+            {{ before_link -}}
+            <a href='{{ item.url | default: "#" }}' class='{{ link_class }}'>
+                {{ before_link_text -}}
+                {% if render_link_text_function -%}
+                    {% include dynamo function=render_link_text_function title=item.title item=item depth=include.params.depth indent_level=4 %}
+                {%- else -%}
+                    {{ item.title }}
+                {%- endif %}
+                {{- after_link_text }}
+            </a>
+            {{- after_link }}
+            {%- endcapture -%}
+            {% if render_link_function -%}
+                {% include dynamo function=render_link_function link=link item=item depth=include.params.depth %}
+            {%- else -%}
+                {{ link }}
+            {%- endif %}
+            {%- if item_has_children %}
+            <ul role="{{ child_nav_role }}" class="{{ child_nav_class }} {% if expand_all_on_load -%}
+                {{ child_nav_expanded_class }}{% else %}{{ child_nav_collapsed_class }}{% endif %}"
+                {%- if child_nav_attributes != blank %} {{ child_nav_attributes }}{% endif %}>
+                {% assign remaining_depth = include.params.depth | minus: 1 -%}
+                {% include dynamo function="render_navigation" items=item.children depth=remaining_depth format=include.params.format indent_level=2 %}
+            </ul>
+            {%- endif %}
+        </li>
+    {%- endfor -%}
+{% endif -%}

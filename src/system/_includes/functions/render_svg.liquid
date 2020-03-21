@@ -1,0 +1,18 @@
+{% comment -%}---------------------------------------------------------------------------
+Function: render_svg
+
+Description: Displays an SVG
+
+Parameters:
+    * svg_url       (string) - URL of the SVG file
+    * svg_class     (string) - CSS class applied to the SVG tag
+    * icon          (string) - the name of the SVG icon
+
+Output: The resulting HTML that renders the SVG
+------------------------------------------------------------------------{% endcomment -%}
+
+{% if include.params.icon -%}
+<svg class="icon {{ include.params.icon }} {{ include.params.svg_class}}" aria-hidden="true" role="img">
+    <use href="{{ include.params.svg_url }}#{{ include.params.icon }}" xlink:href="{{ include.params.svg_url }}#{{ include.params.icon }}"></use>
+</svg>
+{%- endif -%}

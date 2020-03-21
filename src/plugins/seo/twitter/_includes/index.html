@@ -1,0 +1,16 @@
+{% if page.title -%}
+    {% assign twitter_title = page.title | append: " - " | append: SITE_TITLE -%}
+{% else -%}
+    {% assign twitter_title = SITE_TITLE -%}
+{% endif -%}
+
+{% if page.featured_image -%}
+    {% assign twitter_image = page.featured_image -%}
+{% else -%}
+    {% assign twitter_image = site.favicon | default: "/favicon.ico" -%}
+{% endif -%}
+<!-- twitter -->
+<meta name="twitter:title" content="{{ twitter_title }}" />
+<meta name="twitter:description" content="{{ page.excerpt | default: SITE_DESCRIPTION | strip_html | normalize_whitespace | strip }}" />
+<meta name="twitter:image" content="{{ twitter_image }}" />
+<meta name="twitter:card" content="summary_large_image">

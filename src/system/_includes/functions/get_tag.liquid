@@ -1,0 +1,25 @@
+{% comment -%}---------------------------------------------------------------------------
+Function: get_tag
+
+Description: Get tag based on the given tag name.
+
+Usage:
+    {% include dynamo function="get_tag" name="Dynamo" %}
+    The above code gets the "Dynamo" tag archive for the current locale. If the tag is not
+    available, the resulting tag variable is nil.
+
+Parameters:
+    * name                  (string) - Name of the tag
+    * locale                (string) - Locale.  Default: CURRENT_LOCALE
+
+------------------------------------------------------------------------{% endcomment -%}
+
+{% assign tag = nil -%}
+{% if include.params.name -%}
+    {% assign temp_tags = site.terms | where: "name", include.params.name | where: "taxonomy", "tag" -%}
+    {% assign locale = include.params.locale | default: CURRENT_LOCALE -%}
+    {% if locale and locale != site.locale -%}
+        {% assign temp_tags = temp_tags | where: "locale", locale -%}
+    {% endif -%}
+    {% assign tag = temp_tags | first -%}
+{% endif -%}

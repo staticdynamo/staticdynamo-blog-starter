@@ -1,0 +1,26 @@
+{% comment -%}---------------------------------------------------------------------------
+Function: get_term
+
+Description: Get term based on the given term name and taxonomy name
+
+Usage:
+    {% include dynamo function="get_term" name="C#" taxonomy="programming_lang" %}
+    The above code gets the "C#" programming lang for the current locale. If the term is 
+    not available, the resulting term variable is nil.
+
+Parameters:
+    * name                  (string) - Name of the term.
+    * taxonomy              (string) - Name of the taxonomy
+    * locale                (string) - Locale.  Default: CURRENT_LOCALE
+
+------------------------------------------------------------------------{% endcomment -%}
+
+{% assign term = nil -%}
+{% if include.params.name and include.params.taxonomy -%}
+    {% assign temp_terms = site.terms | where: "name", include.params.name | where: "taxonomy", include.params.taxonomy -%}
+    {% assign locale = include.params.locale | default: CURRENT_LOCALE -%}
+    {% if locale and locale != site.locale -%}
+        {% assign temp_terms = temp_terms | where: "locale", locale -%}
+    {% endif -%}
+    {% assign term = temp_terms | first -%}
+{% endif -%}

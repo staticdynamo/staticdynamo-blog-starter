@@ -1,0 +1,28 @@
+{% comment -%}
+-----------------------------------------------------------------------------------------
+Function: enable_smooth_anchor
+
+Description: Enable smooth anchor or change the smooth anchor settings
+
+Usage: 
+    {% include dynamo function="enable_smooth_anchor" top_offset="80" -%}
+
+Parameters:
+    * top_offset_selector       (string) - jQuery selector to calculate the top offset 
+                                           when scrolling to the anchor. 
+    * additional_top_offset     (int)    - Additional top offset value added to the 
+                                           height of top offset selector. Default: 0
+    * smooth_scroll_duration    (int)    - A number determining how long the scrolling 
+                                           animation will run. Default: 0
+-----------------------------------------------------------------------------------------
+{% endcomment -%}
+
+<script>
+$(document).ready(function() {
+    Dynamo.SmoothAnchor.enable(
+        {{ include.params.smooth_scroll_duration | default: 0 }},  // smooth scroll duration
+        '{{ include.params.top_offset_selector | default: "" }}',  // top offset selector
+        {{ include.params.additional_top_offset | default: 0 }}  // additional top offset
+    );
+});
+</script>

@@ -1,0 +1,50 @@
+{% comment -%}---------------------------------------------------------------------------
+This file allows theme creators to offer theme-specific functions or overwrite any of the 
+system functions.  The function parameters can be accessed through include.params object.
+------------------------------------------------------------------------{% endcomment -%}
+
+{% case include.function -%}
+
+
+{% comment -%}---------------------------------------------------------------------------
+Function: render_post_in_post_list
+
+Description: Filter the default display of a post in the 'render_posts' function call.
+
+Parameters:
+    * post          (object) - The post object
+------------------------------------------------------------------------{% endcomment -%}
+{% when "render_post_in_post_list" -%}
+<span class="post-meta">
+    {% include dynamo function="render_datetime" datetime=include.params.post.date locale=page.locale date_format="default" %}
+</span>
+<h3>
+    <a class="post-link" href="{{ include.params.post.url | relative_url }}">
+        {{ include.params.post.title | escape }}
+    </a>
+</h3>
+{% if include.params.show_post_excerpt == true -%}
+    {{ include.params.post.excerpt }}
+{% endif -%}
+
+
+{% comment -%}---------------------------------------------------------------------------
+Function: render_social_link_title
+
+Description: Filter the default navigation item title display in the social link list.
+
+Parameters:
+    * title         (string) - The original title display
+    * item          (object) - The navigation item object whose title is to be displayed. 
+    * depth         (number) - The remaining depth of navigation items to be displayed.
+------------------------------------------------------------------------{% endcomment -%}
+{% when "render_social_link_title" -%}
+<span class="screen-reader-text">{{ include.params.title }}</span>
+{% capture minima_svg_url -%}{{ THEME_DIRECTORY_URL }}/images/minima-social-icons.svg{% endcapture -%}
+{% include dynamo function="render_svg" svg_url=minima_svg_url svg_class="svg-icon" icon=item.icon %}
+{% if include.params.item.username -%}
+<span class="username">{{ include.params.item.username | escape }}</span>
+{% endif -%}
+
+{%- else -%}<N/A>
+{%- endcase -%}

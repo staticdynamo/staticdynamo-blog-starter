@@ -1,0 +1,15 @@
+# This theme was originally developed for Jekyll: 
+# https://github.com/pages-themes/minimal
+# It is ported to StaticDynamo
+# Use it to make something cool, have fun, and share what you've learned with others.
+name: Minima
+uid: minima
+uri: 
+description: >
+  Minima is a one-size-fits-all Jekyll theme for writers. 
+version: 1.1
+license:
+  name: The MIT License (MIT)
+Text Domain: minimal
+tags: 
+  - blog

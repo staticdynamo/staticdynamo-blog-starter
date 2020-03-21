@@ -1,0 +1,132 @@
+{% comment -%}---------------------------------------------------------------------------
+Initialize Page
+------------------------------------------------------------------------{% endcomment -%}
+
+{% assign UNIQUE_ID = UNIQUE_ID | default: 0 | plus: 1 | modulo: 100000 -%}
+{% unless page_initialized == true -%}{% assign page_initialized = true -%}
+    {% assign EMPTY_ARRAY = "" | split: ',' -%}
+    {% assign STACK = EMPTY_ARRAY -%}
+    {% assign ENQUEUED_SCRIPTS = EMPTY_ARRAY -%}
+    {% assign ENQUEUED_STYLES = EMPTY_ARRAY -%}
+    {% assign CURRENT_LOCALE = page.locale | default: site.locale | default: site.locales[0] | downcase -%}
+
+    {% include dynamo function="get_config" of="site" key="title" -%}{% assign SITE_TITLE = config -%}
+    {% include dynamo function="get_config" of="site" key="description" -%}{% assign SITE_DESCRIPTION = config -%}
+    {% include dynamo function="get_config" of="site" key="baseurl" -%}{% assign SITE_BASEURL = config -%}
+    {% assign HOME_URL = SITE_BASEURL | default: "/" -%}
+    {% capture SYSTEM_DIRECTORY_URL -%}{{ SITE_BASEURL }}/src/system{%- endcapture -%}
+    {% capture THEME_DIRECTORY_URL -%}{{ SITE_BASEURL }}/src/themes/{{ site.themes.active }}{%- endcapture -%}
+    {% capture CUSTOM_DIRECTORY_URL -%}{{ SITE_BASEURL }}/src/custom{%- endcapture -%}
+    {% capture PLUGINS_DIRECTORY_URL -%}{{ SITE_BASEURL }}/src/plugins{%- endcapture -%}
+    {% capture LINE_FEED %}
+{% endcapture -%}
+
+    {% include dynamo file="_includes/init.liquid" from="theme,custom" mode="inclusive" -%}
+    {% include dynamo function="load_strings" -%}
+{% endunless -%}
+
+
+{% comment -%}---------------------------------------------------------------------------
+Include File
+File content is stripped in the output
+
+Usage: 
+    {% include dynamo file="_includes/header.html" -%}
+    The above code includes header.html from custom, theme and system exclusively. 
+
+    {% include dynamo file="_includes/head.html" mode="inclusive" -%}
+    The above code includes head.html from system, theme, and custom inclusively.
+------------------------------------------------------------------------{% endcomment -%}
+
+{% if include.file -%}
+    {% if include.mode == "exclusive" or include.mode == nil -%}
+        {% assign file_scopes = include.from | default: "custom,theme,system" | split: ',' -%}
+    {% else -%}
+        {% assign file_scopes = include.from | default: "system,theme,custom" | split: ',' -%}
+    {% endif -%}
+    {% capture dynamo_output -%}
+        {% for file_scope in file_scopes -%}
+            {% capture file_content -%}
+                {% case file_scope -%}
+                    {% when "custom" -%}
+                    {% include custom/{{ include.file }} params=include -%}
+                    {% when "theme" -%}
+                    {% include themes/{{ site.themes.active }}/{{ include.file }} params=include -%}
+                    {% when "system" -%}
+                    {% include system/{{ include.file }} params=include -%}
+                    {% when "root" -%}
+                    {% include {{ include.file }} params=include -%}
+                {% endcase -%}
+            {%- endcapture -%}
+            {% if file_content != blank -%}
+                {{ file_content | strip -}}
+                {% if include.mode == "exclusive" or include.mode == nil or forloop.last -%}
+                    {% break -%}
+                {% else -%}
+                    {{ LINE_FEED -}}
+                {% endif -%}
+            {% endif -%}
+        {% endfor -%}
+    {%- endcapture -%}
+{% endif -%}
+
+
+{% comment -%}---------------------------------------------------------------------------
+Call Function
+Function call result is stripped in the output
+
+Usage: 
+    {% include dynamo function="render_datetime" datetime=page.date date_format="ISO8601" -%}
+    The above code renders the current page date in ISO 8601 format.
+
+    {% include dynamo function="render_comments" -%}
+    The above code displays all comments for a post or page.
+------------------------------------------------------------------------{% endcomment -%}
+
+{% if include.function -%}
+    {% comment -%}Check custom functions{% endcomment -%}
+    {% capture dynamo_output -%}
+        {% include custom/_includes/functions.liquid function=include.function params=include %}
+    {%- endcapture -%}
+    {%- assign dynamo_output = dynamo_output | strip -%}
+    {% if dynamo_output == "<N/A>" -%}
+        {% comment -%}Check theme functions{% endcomment -%}
+        {% capture dynamo_output -%}
+            {% include themes/{{ site.themes.active }}/_includes/functions.liquid function=include.function params=include %}
+        {%- endcapture -%}
+        {%- assign dynamo_output = dynamo_output | strip -%}
+        {% if dynamo_output == "<N/A>" -%}
+            {% comment -%}Check system functions{% endcomment -%}
+            {% capture dynamo_output -%}
+                {% include system/_includes/functions/{{ include.function }}.liquid params=include %}
+            {%- endcapture -%}
+            {%- assign dynamo_output = dynamo_output | strip -%}
+        {% endif -%}
+    {% endif -%}
+{% endif -%}
+
+
+{% comment -%}---------------------------------------------------------------------------
+Beautify and Output
+------------------------------------------------------------------------{% endcomment -%}
+
+{% if dynamo_output != blank -%}
+    {% if include.indent_level and include.indent_level > 0 -%}
+        {% capture line_feed_with_indention -%}
+            {{ LINE_FEED }}{% if include.indent_level %}{% for i in (1..include.indent_level) %}{{ "    " }}{% endfor %}{% endif %}
+        {%- endcapture -%}
+        {% comment -%}Avoid indenting content inside <pre>{% endcomment -%}
+        {% assign beautify_pre_befores = dynamo_output | split: "<pre" -%}
+        {% assign dynamo_output = "" -%}
+        {% for beautify_pre_before in beautify_pre_befores -%}
+            {% assign beautify_pres = beautify_pre_before | split: "</pre>" -%}
+            {% capture dynamo_output -%}
+                {{ dynamo_output -}}
+                {% if beautify_pre_before contains "</pre>" -%}<pre{{ beautify_pres.first }}</pre>{% endif -%}
+                {{ beautify_pres.last | replace: LINE_FEED, line_feed_with_indention -}}
+            {% endcapture -%}
+        {% endfor -%}
+    {% endif -%}
+
+    {{ dynamo_output -}}
+{% endif -%}

@@ -1,0 +1,54 @@
+{% comment -%}---------------------------------------------------------------------------
+Function: enqueue_style
+
+Description: Enqueue the stylesheet(s) for bootstrap, font-awesome, etc.
+
+Usage:
+    {% include dynamo function="enqueue_style" for="bootstrap" -%}
+
+Parameters:
+    * for (string)   : can be one of the following values
+                       - "bootstrap"
+                       - "font-awesome"
+------------------------------------------------------------------------{% endcomment -%}
+
+{% case include.params.for -%}
+
+    {% when "bootstrap" -%}
+    {% unless ENQUEUED_STYLES contains "bootstrap" -%}
+        {% assign ENQUEUED_STYLES = ENQUEUED_STYLES | push: "bootstrap" -%}
+        {% case include.params.major_version -%}
+            {% when "3" -%}{% assign bootstrap_version = "3.3.7" -%}
+            {% when "4" -%}{% assign bootstrap_version = "4.4.1" -%}
+            {% else -%}{% assign bootstrap_version = "3.3.7" -%}
+        {% endcase -%}
+        {% if jekyll.environment == 'development' or include.params.from_local == true -%}
+<link rel="stylesheet" href="{{ SYSTEM_DIRECTORY_URL }}/lib/bootstrap/{{ bootstrap_version }}/dist/css/bootstrap.min.css">
+        {% else -%}
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/{{ bootstrap_version }}/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+<script>
+    // Bootstrap CSS local fallback
+    $(document).ready(function() {
+        var bodyColor = $('body').css('color');
+        if (bodyColor != 'rgb(51, 51, 51)') {
+            $("head").prepend('<link rel="stylesheet" href="{{ SYSTEM_DIRECTORY_URL }}/lib/bootstrap/{{ bootstrap_version }}/dist/css/bootstrap.min.css">');
+        }
+    });
+</script>
+        {%- endif -%}
+    {% endunless -%}
+
+    {% when "font-awesome" -%}
+    {% unless ENQUEUED_STYLES contains "font-awesome" -%}
+        {% assign ENQUEUED_STYLES = ENQUEUED_STYLES | push: "font-awesome" -%}
+        {% case include.params.major_version -%}
+            {% when "4" -%}
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+            {% when "5" -%}
+<link href="https://use.fontawesome.com/releases/v5.0.8/css/all.css" rel="stylesheet">
+            {% else -%}
+<link href="https://use.fontawesome.com/releases/v5.0.8/css/all.css" rel="stylesheet">
+        {%- endcase -%}
+    {% endunless -%}
+
+{% endcase -%}

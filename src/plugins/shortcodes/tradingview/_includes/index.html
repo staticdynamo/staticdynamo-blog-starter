@@ -1,0 +1,37 @@
+{% if include.params.attributes -%}
+    {% capture symbol -%}{% include dynamo function="extract_shortcode_att" attribute="symbol" attributes=include.params.attributes %}{%- endcapture -%}
+    {% capture width -%}{% include dynamo function="extract_shortcode_att" default="100%" attribute="width" attributes=include.params.attributes %}{%- endcapture -%}
+    {% capture height -%}{% include dynamo function="extract_shortcode_att" default="600px" attribute="height" attributes=include.params.attributes %}{%- endcapture -%}
+    {% capture interval -%}{% include dynamo function="extract_shortcode_att" default="D" attribute="interval" attributes=include.params.attributes %}{%- endcapture -%}
+    {% capture timezone -%}{% include dynamo function="extract_shortcode_att" default="Etc/UTC" attribute="timezone" attributes=include.params.attributes %}{%- endcapture -%}
+    {% capture theme -%}{% include dynamo function="extract_shortcode_att" default="light" attribute="theme" attributes=include.params.attributes %}{%- endcapture -%}
+
+    {% if symbol -%}
+<!-- TradingView Widget BEGIN -->
+<div class="tradingview-widget-container">
+    <div id="tradingview_{{ UNIQUE_ID }}" style="width: {{ width }}; height: {{ height }}"></div>
+    <div class="tradingview-widget-copyright"><a href="https://www.tradingview.com/symbols/{{ symbol }}/" rel="noopener" target="_blank"><span class="blue-text">{{ symbol }} Chart</span></a> by TradingView</div>
+    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+    <script type="text/javascript">
+    new TradingView.widget(
+        {
+            "autosize": true,
+            "symbol": "{{ symbol }}",
+            "interval": "{{ interval }}",
+            "timezone": "{{ timezone }}",
+            "theme": "{{ theme }}",
+            "style": "1",
+            "locale": "en",
+            "toolbar_bg": "#f1f3f6",
+            "enable_publishing": false,
+            "news": [
+              "headlines"
+            ],
+            "container_id": "tradingview_{{ UNIQUE_ID }}"
+        }
+    );
+    </script>
+</div>
+<!-- TradingView Widget END -->
+    {%- endif -%}
+{% endif -%}

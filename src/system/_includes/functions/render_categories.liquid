@@ -1,0 +1,231 @@
+{% comment -%}---------------------------------------------------------------------------
+Function: render_categories
+
+Description: Render a list of categories.  Each category is linked to the category 
+    archive page.
+
+Usage:
+    {% include dynamo function="render_categories" forbluemat="flat" separator=", " %}
+    The above code renders a list of categories for the current locale in the flat format.
+    Categories are seperated by ", ".
+
+    {% include dynamo function="render_categories" 
+        num_of_categories=10 
+        order_by="size" 
+        order="DESC" 
+        format="list" 
+        show_size=true %}
+    The above code renders top 10 categories with archive size for the current locale in 
+    the list format.
+
+Parameters:
+    * names                     (array)  - An array of category names 
+                                           (e.g. post.categories).
+    * where_exp                 (string) - Filter the categories based on the given where 
+                                           exp. In the where_exp, use 'category' to refer 
+                                           to the category object. 
+    * locale                    (string) - Locale of the categories to get. 
+                                           Default: CURRENT_LOCALE. If locale equals 
+                                           site.locale, get all categories; otherwise, get 
+                                           categories of the given locale.
+    * hide_empty                (bool)   - Whether to hide categories with empty archive 
+                                           or not. Default: false, meaning that categories 
+                                           with empty archive will also be rendered.
+    * order_by                  (string) - Order the categories by "size" or any field of 
+                                           category (e.g. "name", "display_name")
+    * order                     (string) - "ASC" or "DESC".  The parameter is valid only 
+                                           when order_by is provided.
+
+    * format                    (string) - Format of the display.
+                                           "list" - an unordered list <ul>
+                                           "flat" - separated by 'separator'
+                                           "dropdown" - a dropdown list
+                                           "json" - json format
+    * num_of_categories         (int)    - The maximum number of categories to display.
+                                           Default to display all categories. 
+    * render_category_function  (string) - Filter function to overwrite the default 
+                                           category rendering.
+    * show_size                 (bool)   - Whether to show the category archive size or 
+                                           not. Default: false.
+    * before_link_text          (string) - Text that goes before the text of the link. 
+    * after_link_text           (string) - Text that goes after the text of the link. 
+
+    Parameters for the "list" format:
+    * container_class                (string) - CSS class to use for the ul element which 
+                                           forms the category list. 
+                                           Default: 'category-list'.
+    * list_item_class           (string) - CSS class to use for the li element which 
+                                           forms the category list. 
+                                           Default: 'category-item'.
+
+    Parameters for the "flat" format:
+    * separator                 (string) - The text/space between categories. Default: " "
+
+------------------------------------------------------------------------{% endcomment -%}
+
+{% assign num_of_categories = include.params.num_of_categories | default: -1 -%}
+{% if num_of_categories != 0 -%}
+
+    {% comment -%}Get categories{% endcomment -%}
+    {% include dynamo function="get_categories" 
+        names=include.params.names 
+        where_exp=include.params.where_exp 
+        locale=include.params.locale 
+        hide_empty=include.params.hide_empty 
+        order_by=include.params.order_by 
+        order=include.params.order -%}
+
+    {% if categories.size > 0 -%}
+
+        {% comment -%}If category size is needed, get category sizes{% endcomment -%}
+        {% if include.params.show_size == true or include.params.order_by == "size" -%}
+            {% assign category_archive_settings = site.taxonomies.category.settings.archive -%}
+            {% include dynamo function="get_posts" 
+                post_collection=category_archive_settings.post_collection 
+                where_exp=category_archive_settings.where_exp 
+                locale=include.params.locale -%}
+            {% assign taxonomy_field = category_archive_settings.taxonomy_field | default: "categories" -%}
+            {% assign category_names = categories | map: "name" -%}
+            {% assign nonempty_categories = posts | map: taxonomy_field | 
+                join: "," | join: "," | split: "," | group_by_exp: "item", "item" | 
+                where_exp: "category", "category_names contains category.name" -%}
+        {% endif -%}
+
+        {% comment -%}Render categories ordered by archive size{% endcomment -%}
+        {% if include.params.order_by == "size" -%}
+            {% comment -%}Sort category sizes{% endcomment -%}
+            {% assign nonempty_categories = nonempty_categories | sort: "size" | reverse -%}
+
+            {% assign c = 0 -%}
+            {% case include.params.format -%}
+
+{%- comment -%}'list' format{% endcomment -%}
+{% when "list" -%}
+<ul class='{{ include.params.container_class | default: "category-list" }}'>
+    {% for nonempty_category in nonempty_categories -%}
+        {% if num_of_categories > 0 and c >= num_of_categories -%}
+            {% break -%}
+        {% endif -%}
+
+        {% assign category = categories | where: "name", nonempty_category.name | first -%}
+        {% if category -%}
+            {% assign c = c | plus: 1 -%}
+    <li class='{{ include.params.list_item_class | default: "category-item" }}'>
+        {% if include.params.render_category_function -%}
+            {% include dynamo function=include.params.render_category_function 
+                category=category 
+                size=nonempty_category.size 
+                indent_level=2 %}
+        {% else -%}
+        <a href='{{ category.url }}'>
+            {{ include.params.before_link_text }}{{ category.display_name | default: category.name }}{{ include.params.after_link_text -}}
+            {% if include.params.show_size == true -%}<span class="category-size"> ({{ nonempty_category.size }})</span>{%- endif %}
+        </a>
+        {%- endif %}
+    </li>
+        {%- endif %}
+    {%- endfor %}
+    {% if c < num_of_categories and include.params.hide_empty != true -%}
+        {% comment -%}Display some empty categories{% endcomment -%}
+    {% endif -%}
+</ul>
+
+{%- comment -%}'flat' format{% endcomment -%}
+{% when "flat" -%}
+{% for nonempty_category in nonempty_categories -%}
+    {% if num_of_categories > 0 and c >= num_of_categories -%}
+        {% break -%}
+    {% endif -%}
+
+    {% assign category = categories | where: "name", nonempty_category.name | first -%}
+    {% if category -%}
+        {% if c > 0 -%}{{ include.params.separator | default: " " }}{% endif -%}
+        {% assign c = c | plus: 1 -%}
+        {% if include.params.render_category_function -%}
+            {% include dynamo function=include.params.render_category_function 
+                category=category 
+                size=nonempty_category.size %}
+        {% else -%}
+<a href='{{ category.url }}'>
+    {{ include.params.before_link_text }}{{ category.display_name | default: category.name }}{{ include.params.after_link_text -}}
+    {% if include.params.show_size == true -%}<span class="category-size"> ({{ nonempty_category.size }})</span>{%- endif %}
+</a>
+        {%- endif %}
+    {%- endif %}
+{% endfor -%}
+{% if c < num_of_categories and include.params.hide_empty != true -%}
+    {% comment -%}Display some empty categories{% endcomment -%}
+{% endif -%}
+
+            {% endcase -%}
+
+        {% else -%}
+        {% comment -%}Render categories ordered by any other fields{% endcomment -%}
+
+            {% assign c = 0 -%}
+            {% case include.params.format -%}
+
+{%- comment -%}'list' format{% endcomment -%}
+{% when "list" -%}
+<ul class='{{ include.params.container_class | default: "category-list" }}'>
+    {% for category in categories -%}
+        {% if num_of_categories > 0 and c >= num_of_categories -%}
+            {% break -%}
+        {% endif -%}
+
+        {% assign c = c | plus: 1 -%}
+        {% if include.params.show_size == true -%}
+            {% assign category_size = nonempty_categories | where: "name", category.name | map: "size" | first | default: 0 -%}
+        {% else -%}
+            {% assign category_size = nil -%}
+        {% endif -%}
+    <li class='{{ include.params.list_item_class | default: "category-item" }}'>
+        {% if include.params.render_category_function -%}
+            {% include dynamo function=include.params.render_category_function 
+                category=category 
+                size=category_size 
+                indent_level=2 %}
+        {% else -%}
+        <a href='{{ category.url }}'>
+            {{ include.params.before_link_text }}{{ category.display_name | default: category.name }}{{ include.params.after_link_text -}}
+            {% if include.params.show_size == true -%}
+                <span class="category-size"> ({{ category_size }})</span>
+            {%- endif %}
+        </a>
+        {%- endif %}
+    </li>
+    {%- endfor %}
+</ul>
+
+{%- comment -%}'flat' format{% endcomment -%}
+{% when "flat" -%}
+{% for category in categories -%}
+    {% if num_of_categories > 0 and c >= num_of_categories -%}
+        {% break -%}
+    {% endif -%}
+
+    {% if c > 0 -%}{{ include.params.separator | default: " " }}{% endif -%}
+    {% assign c = c | plus: 1 -%}
+    {% if include.params.show_size == true -%}
+        {% assign category_size = nonempty_categories | where: "name", category.name | map: "size" | first | default: 0 -%}
+    {% else -%}
+        {% assign category_size = nil -%}
+    {% endif -%}
+
+    {% if include.params.render_category_function -%}
+        {% include dynamo function=include.params.render_category_function category=category size=category_size %}
+    {% else -%}
+<a href='{{ category.url }}'>
+    {{ include.params.before_link_text }}{{ category.display_name | default: category.name }}{{ include.params.after_link_text -}}
+    {% if include.params.show_size == true -%}
+        <span class="category-size"> ({{ category_size }})</span>
+    {%- endif %}
+</a>
+    {%- endif %}
+{% endfor -%}
+
+            {% endcase -%}
+        {% endif -%}
+
+    {% endif -%}
+{% endif -%}

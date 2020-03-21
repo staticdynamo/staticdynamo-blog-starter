@@ -1,0 +1,61 @@
+{% if include.params.use_web_component == true -%}
+<twentyseventeen-header></twentyseventeen-header>
+{% else -%}
+<header id="masthead" class="site-header" role="banner">
+    <div class="custom-header">
+        <!--Displays header media-->
+        <div class="custom-header-media">
+            <div id="wp-custom-header" class="wp-custom-header">
+                {% assign default_header_image_uri = THEME_DIRECTORY_URL | append: "/images/header.jpg" -%}
+                <img src='{% include dynamo function="render_config" of="theme" key="header.image" default_value=default_header_image_uri %}' alt="{{ SITE_TITLE }}" />
+            </div>
+        </div>
+        <!--Displays header site branding-->
+        <div class="site-branding" style="margin-bottom: 71px;">
+            <div class="wrap">
+                {% if site.logo -%}
+                <a href="{{ HOME_URL }}" class="custom-logo-link" rel="home" itemprop="url">
+                    <img src="{{ site.logo }}" class="custom-logo" itemprop="logo" alt="{{ SITE_TITLE }}" />
+                </a>
+                {% endif -%}
+                <div class="site-branding-text">
+                    <h1 class="site-title">
+                        <a href="{{ HOME_URL }}" rel="home">{{ SITE_TITLE }}</a>
+                    </h1>
+                    <p class="site-description">{{ SITE_DESCRIPTION }}</p>
+                </div><!-- .site-branding-text -->
+            </div><!-- .wrap -->
+        </div><!-- .site-branding -->
+    </div><!-- .custom-header -->
+    <div class="navigation-top">
+        <div class="wrap">
+            <nav id="site-navigation" class="main-navigation" role="navigation" aria-label="Top Menu">
+                <button class="menu-toggle" aria-controls="top-menu" aria-expanded="false">
+                    {% include dynamo function="render_svg" icon="icon-bars" indent_level=5 %}
+                    {% include dynamo function="render_svg" icon="icon-close" indent_level=5 %}
+                    Menu
+                </button>
+                {% include dynamo function="render_navigation" 
+                    format="menu" 
+                    nav="header_menu" 
+                    nav_id="top-menu" 
+                    nav_class="menu" 
+                    container_class="menu-main-container" 
+                    current_item_class="current-menu-item" 
+                    current_item_ancestor_class="current-menu-ancestor"
+                    item_has_children_class="menu-item-has-children" 
+                    child_nav_class="sub-menu" 
+                    render_link_text_function="render_header_menu_title" 
+                    indent_level=4 %}
+                {% if page.layout == "home" -%}
+                <!--Displays scroll down icon on homepage-->
+                <a href="#content" class="menu-scroll-down">
+                    {% include dynamo function="render_svg" icon="icon-arrow-right" indent_level=5 %}
+                    <span class="screen-reader-text">Scroll down to content</span>
+                </a>
+                {%- endif %}
+            </nav>
+        </div>
+    </div><!-- .navigation-top -->
+</header>
+{% endif -%}

@@ -1,0 +1,18 @@
+{% comment -%}
+----------------------------------------------------------------------------------
+Widget: Content TOC
+The widget title is not displayed is the content TOC is empty.
+----------------------------------------------------------------------------------
+{% endcomment -%}
+
+{% assign widget_content_toc_unique_id = UNIQUE_ID | prepend: "content-toc-" -%}
+<section id="{{ widget_content_toc_unique_id }}" class="widget widget_content_toc">
+    {% capture content_toc -%}
+    {% include dynamo function="render_content_toc" content=content 
+        scroll_highlight=include.params.settings.scroll_highlight container="" indent_level=1 %}
+    {%- endcapture -%}
+    {% if include.params.settings.title and content_toc != blank -%}
+    <h2 class="widget-title">{{ include.params.settings.title }}</h2>
+    {% endif -%}
+    {{ content_toc }}
+</section>

@@ -1,0 +1,342 @@
+{% comment -%}---------------------------------------------------------------------------
+Function: render_posts
+
+Description: Render posts in list / flat / json format.
+
+Usage: 
+    {% include dynamo function="render_posts" 
+        format="list" 
+        num_of_posts=10 %}
+    The above code renders 10 most recent posts of the current locale in "list" format.
+
+Parameters:
+    * posts                 (array)  - An array of posts to render.  If this parameter 
+                                       is not provided, the function queries posts based
+                                       on the following parameters.
+        * post_collection   (string) - Name of the post collection. 
+        * locale            (string) - Locale of the posts to get. 
+                                       Default: CURRENT_LOCALE. If locale equals 
+                                       site.locale, get all site posts; otherwise, get 
+                                       posts of the given locale.
+        * where_exp         (string) - Filter the posts based on the given where exp. 
+                                       In the where_exp, use 'item' to refer to the post  
+                                       object. 
+        * order_by          (string) - Specify the post property to order the posts.
+        * order             (string) - "ASC" or "DESC". The parameter is valid only when 
+                                       order_by is provided.
+        * enable_pagination (bool)   - Whether to enable pagination when listing posts or 
+                                       not. This parameter is used only when the posts 
+                                       parameter is not provided. Default: false.
+
+    * format                (string) - Format of the display.
+                                       "list" - an unordered list <ul> of posts
+                                       "flex" - a flexible responsive layout of posts using 
+                                       CSS flexbox
+                                       "bootstrap"
+                                       "flat" - separated by 'separator'
+                                       "json" - json format
+                                       Default: "list"
+    * num_of_posts          (int)    - Number of posts to list.  -1 or not specified 
+                                       means listing all posts identified by the posts 
+                                       parameter.  Suggest setting this parameter to a 
+                                       reasonable value e.g. 5 or 10 when 
+                                       enable_pagination is false. 
+    * render_post_function  (string) - Filter function to overwrite the default post 
+                                       rendering.
+    * show_post_date        (bool)   - Whether to show post date or not in the post 
+                                       listing.
+    * show_post_excerpt     (bool)   - Whether to show post excerpt or not in the post 
+                                       listing. If show_post_content is true, 
+                                       show_post_excerpt is treated as false. 
+    * show_post_content     (bool)   - Whether to show post content or not in the post 
+                                       listing.  If show_post_content is true, 
+                                       show_post_excerpt is treated as false. 
+
+    * enable_pagination     (bool)   - Whether to enable pagination when listing posts or 
+                                       not. This parameter is used only when the posts 
+                                       parameter is not provided. Default: false.
+
+    Parameters if enable_pagination is true:
+    * prev_page_text        (string) - Text of the link to the previous set of posts. 
+                                       Defaults: STRING__DEFAULT_PAGINATION_PREV_PAGE_TEXT.
+    * next_page_text        (string) - Text of the link to the next set of posts. 
+                                       Defaults: STRING__DEFAULT_PAGINATION_NEXT_PAGE_TEXT.
+    * first_page_url        (string) - URL of the first page in pagination if it is not 
+                                       the relative URL of "/".
+    * before_page_number    (string) - A string to append before the page number.
+    * after_page_number     (string) - A string to append after the page number. 
+
+    Parameters if format equals "list" or "flex":
+    * container_class       (string) - CSS class to use for the container element. 
+                                       Default 'post-list' if format is "list", or 
+                                       'flex-container' if format is 'flex'.
+    * item_class            (string) - CSS class to use for the child elements in the 
+                                       container. Default: 'post'.
+
+    Parameters if format equals "flat":
+    * separator             (string) - The text/space between posts.  Default: ""
+
+------------------------------------------------------------------------{% endcomment -%}
+
+{% comment -%}Get the posts to list{% endcomment -%}
+{% if include.params.posts -%}
+    {% assign posts = include.params.posts -%}
+{% else -%}
+    {% include dynamo function="get_posts" 
+        post_collection=include.params.post_collection 
+        enable_pagination=include.params.enable_pagination 
+        locale=include.params.locale 
+        where_exp=include.params.where_exp 
+        order_by=include.params.order_by 
+        order=include.params.order -%}
+{% endif -%}
+
+{% assign format = include.params.format | default: "list" -%}
+{% case format -%}
+
+{% comment -%}"list" format{% endcomment -%}
+{% when "list" -%}
+<ul class='{{ include.params.container_class | default: "post-list" }}'>
+    {% for post in posts -%}
+        {% if include.params.num_of_posts > -1 and forloop.index > include.params.num_of_posts -%}
+            {% break -%}
+        {% endif -%}
+
+    <li class='{{ include.params.item_class | default: "post" }}'>
+        {% if include.params.render_post_function -%}
+            {% include dynamo function=include.params.render_post_function 
+                post=post 
+                show_post_date=include.params.show_post_date 
+                show_post_excerpt=include.params.show_post_excerpt 
+                show_post_content=include.params.show_post_content 
+                indent_level=2 -%}
+        {% else -%}
+        <article>
+            <a href="{{ post.url | relative_url }}">{{ post.title }}</a>
+            {% if include.params.show_post_date == true -%}
+            <time class="post-date" datetime='{% include dynamo function="render_datetime" datetime=post.date date_format="ISO8601" %}'>
+                {% include dynamo function="render_datetime" datetime=post.date date_format="default" %}
+            </time>
+            {%- endif %}
+            {% if include.params.show_post_content == true -%}
+            <div class="post-content">
+                {% if post.content contains '<!--more-->' -%}
+                    {% assign content_first_part = post.content | split: '<!--more-->' | first -%}
+                {% include dynamo function="render_content" content=content_first_part indent_level=2 %}
+                <a href="{{ post.url | relative_url }}" class="more-link">{{ STRING__CONTINUE_READING }}</a>
+                {% else -%}
+                {% include dynamo function="render_content" content=post.content indent_level=2 %}
+                {%- endif %}
+            </div>
+            {% elsif include.params.show_post_excerpt == true -%}
+            <div class="post-excerpt">
+                {{ post.excerpt }}
+                <a href="{{ post.url | relative_url }}" class="more-link">{{ STRING__CONTINUE_READING }}</a>
+            </div>
+            {%- endif %}
+        </article>
+        {%- endif %}
+    </li>
+    {%- endfor %}
+</ul>
+
+{% if include.params.enable_pagination == true -%}
+    {% include dynamo function="render_pagination" 
+        prev_page_text=include.params.prev_page_text 
+        next_page_text=include.params.next_page_text 
+        first_page_url=include.params.first_page_url 
+        before_page_number=include.params.before_page_number
+        after_page_number=include.params.after_page_number %}
+{% endif -%}
+
+{% comment -%}"flex" format{% endcomment -%}
+{% when "flex" -%}
+<div class='{{ include.params.container_class | default: "flex-container" }}' style="display: flex">
+    {% for post in posts -%}
+        {% if include.params.num_of_posts > -1 and forloop.index > include.params.num_of_posts -%}
+            {% break -%}
+        {% endif -%}
+
+    <div class='{{ include.params.item_class | default: "post" }}'>
+        {% if include.params.render_post_function -%}
+            {% include dynamo function=include.params.render_post_function 
+                post=post 
+                show_post_date=include.params.show_post_date 
+                show_post_excerpt=include.params.show_post_excerpt 
+                show_post_content=include.params.show_post_content 
+                indent_level=2 -%}
+        {% else -%}
+        <article>
+            <a href="{{ post.url | relative_url }}">{{ post.title }}</a>
+            {% if include.params.show_post_date == true -%}
+            <time class="post-date" datetime='{% include dynamo function="render_datetime" datetime=post.date date_format="ISO8601" %}'>
+                {% include dynamo function="render_datetime" datetime=post.date date_format="default" %}
+            </time>
+            {%- endif %}
+            {% if include.params.show_post_content == true -%}
+            <div class="post-content">
+                {% if post.content contains '<!--more-->' -%}
+                    {% assign content_first_part = post.content | split: '<!--more-->' | first -%}
+                {% include dynamo function="render_content" content=content_first_part indent_level=2 %}
+                <a href="{{ post.url | relative_url }}" class="more-link">{{ STRING__CONTINUE_READING }}</a>
+                {% else -%}
+                {% include dynamo function="render_content" content=post.content indent_level=2 %}
+                {%- endif %}
+            </div>
+            {% elsif include.params.show_post_excerpt == true -%}
+            <div class="post-excerpt">
+                {{ post.excerpt }}
+                <a href="{{ post.url | relative_url }}" class="more-link">{{ STRING__CONTINUE_READING }}</a>
+            </div>
+            {%- endif %}
+        </article>
+        {%- endif %}
+    </div>
+    {%- endfor %}
+</div>
+
+{% if include.params.enable_pagination == true -%}
+    {% include dynamo function="render_pagination" 
+        prev_page_text=include.params.prev_page_text 
+        next_page_text=include.params.next_page_text 
+        first_page_url=include.params.first_page_url 
+        before_page_number=include.params.before_page_number
+        after_page_number=include.params.after_page_number %}
+{% endif -%}
+
+{% comment -%}"bootstrap" format{% endcomment -%}
+{% when "bootstrap" -%}
+<div class='{{ include.params.container_class | default: "container" }}'>
+    <div class='row'>
+    {% for post in posts -%}
+        {% if include.params.num_of_posts > -1 and forloop.index > include.params.num_of_posts -%}
+            {% break -%}
+        {% endif -%}
+
+    <div class='{{ include.params.item_class | default: "col-md-4" }}'>
+        {% if include.params.render_post_function -%}
+            {% include dynamo function=include.params.render_post_function 
+                post=post 
+                show_post_date=include.params.show_post_date 
+                show_post_excerpt=include.params.show_post_excerpt 
+                show_post_content=include.params.show_post_content 
+                indent_level=2 -%}
+        {% else -%}
+        <article>
+            <a href="{{ post.url | relative_url }}">{{ post.title }}</a>
+            {% if include.params.show_post_date == true -%}
+            <time class="post-date" datetime='{% include dynamo function="render_datetime" datetime=post.date date_format="ISO8601" %}'>
+                {% include dynamo function="render_datetime" datetime=post.date date_format="default" %}
+            </time>
+            {%- endif %}
+            {% if include.params.show_post_content == true -%}
+            <div class="post-content">
+                {% if post.content contains '<!--more-->' -%}
+                    {% assign content_first_part = post.content | split: '<!--more-->' | first -%}
+                {% include dynamo function="render_content" content=content_first_part indent_level=2 %}
+                <a href="{{ post.url | relative_url }}" class="more-link">{{ STRING__CONTINUE_READING }}</a>
+                {% else -%}
+                {% include dynamo function="render_content" content=post.content indent_level=2 %}
+                {%- endif %}
+            </div>
+            {% elsif include.params.show_post_excerpt == true -%}
+            <div class="post-excerpt">
+                {{ post.excerpt }}
+                <a href="{{ post.url | relative_url }}" class="more-link">{{ STRING__CONTINUE_READING }}</a>
+            </div>
+            {%- endif %}
+        </article>
+        {%- endif %}
+    </div>
+    {%- endfor %}
+    </div>
+</div>
+
+{% if include.params.enable_pagination == true -%}
+    {% include dynamo function="render_pagination" 
+        prev_page_text=include.params.prev_page_text 
+        next_page_text=include.params.next_page_text 
+        first_page_url=include.params.first_page_url 
+        before_page_number=include.params.before_page_number
+        after_page_number=include.params.after_page_number %}
+{% endif -%}
+
+{% comment -%}"flat" format{% endcomment -%}
+{% when "flat" -%}
+{% for post in posts -%}
+    {% if include.params.num_of_posts > -1 and forloop.index > include.params.num_of_posts -%}
+        {% break -%}
+    {% endif -%}
+
+    {% unless forloop.first -%}
+        {% if include.params.seperator -%}{{ include.params.seperator }}{% endif -%}
+    {% endunless -%}
+
+    {% if include.params.render_post_function -%}
+        {% include dynamo function=include.params.render_post_function 
+            post=post 
+            show_post_date=include.params.show_post_date 
+            show_post_excerpt=include.params.show_post_excerpt 
+            show_post_content=include.params.show_post_content -%}
+    {% else -%}
+
+<article>
+    <a href="{{ post.url | relative_url }}">{{ post.title }}</a>
+    {% if include.params.show_post_date == true -%}
+    <time class="post-date" datetime='{% include dynamo function="render_datetime" datetime=post.date date_format="ISO8601" %}'>
+        {% include dynamo function="render_datetime" datetime=post.date date_format="default" %}
+    </time>
+    {% endif -%}
+    {% if include.params.show_post_content == true -%}
+    <div class="post-content">
+        {% if post.content contains '<!--more-->' -%}
+            {% assign content_first_part = post.content | split: '<!--more-->' | first -%}
+        {% include dynamo function="render_content" content=content_first_part indent_level=2 %}
+        <a href="{{ post.url | relative_url }}" class="more-link">{{ STRING__CONTINUE_READING }}</a>
+        {% else -%}
+        {% include dynamo function="render_content" content=post.content indent_level=2 %}
+        {%- endif %}
+    </div>
+    {%- elsif include.params.show_post_excerpt == true -%}
+    <div class="post-excerpt">
+        {{ post.excerpt }}
+        <a href="{{ post.url | relative_url }}" class="more-link">{{ STRING__CONTINUE_READING }}</a>
+    </div>
+    {%- endif %}
+</article>
+
+    {%- endif %}
+{% endfor -%}
+
+{% if enable_pagination == true -%}
+    {% include dynamo function="render_pagination" 
+        prev_page_text=include.params.prev_page_text 
+        next_page_text=include.params.next_page_text 
+        first_page_url=include.params.first_page_url 
+        before_page_number=include.params.before_page_number
+        after_page_number=include.params.after_page_number %}
+{% endif -%}
+
+{% comment -%}"json" format{% endcomment -%}
+{% when "json" -%}
+[{%- for post in posts %}
+    {% if include.params.num_of_posts > -1 and forloop.index > include.params.num_of_posts -%}
+        {% break -%}
+    {% endif -%}
+    {
+        "url": {{ post.url | absolute_url | jsonify }},
+        "title": {{ post.title | jsonify }},
+        "excerpt": {{ post.excerpt | strip_html | normalize_whitespace | strip | jsonify }},
+        {% if include.params.show_post_content == true -%}
+        {% capture post_content -%}
+        {% include dynamo function="render_content" content=post.content %}
+        {%- endcapture -%}
+        "content": {{ post_content | jsonify }},
+        {% endif -%}
+        "categories": {{ post.categories | jsonify }},
+        "tags": {{ post.tags | jsonify }}
+    }{% unless forloop.last or forloop.index == include.params.num_of_posts -%},{% endunless -%}
+{% endfor %}
+]
+
+{% endcase -%}

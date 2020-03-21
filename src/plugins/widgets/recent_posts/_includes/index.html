@@ -1,0 +1,17 @@
+{% comment -%}---------------------------------------------------------------------------
+Widget: Recent Posts
+------------------------------------------------------------------------{% endcomment -%}
+
+{% comment -%}Extract settings from include.params.settings{% endcomment -%}
+{% assign title = include.params.settings.title | default: "Recent Posts" -%}
+{% assign num_of_posts = include.params.settings.num_of_posts | default: 5 -%}
+{% assign show_post_date = include.params.settings.show_post_date | default: false -%}
+{% assign widget_recent_posts_unique_id = UNIQUE_ID | prepend: "recent-posts-" -%}
+<section id="{{ widget_recent_posts_unique_id }}" class="widget widget_recent_entries">
+    <h2 class="widget-title">{{ title }}</h2>
+    {% include dynamo function="render_posts" 
+        format="list" 
+        num_of_posts=num_of_posts 
+        show_post_date=show_post_date 
+        indent_level=1 %}
+</section>

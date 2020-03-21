@@ -1,0 +1,42 @@
+{% if include.params.use_web_component == true -%}
+<twentyseventeen-footer></twentyseventeen-footer>
+{% else -%}
+<footer id="colophon" class="site-footer" role="contentinfo">
+    <div class="wrap">
+        {% include dynamo function="get_config" of="theme" key="footer" -%}
+        {% assign footer_config = config -%}
+        {% if footer_config.sidebar1 or footer_config.sidebar2 -%}
+        <aside class="widget-area" role="complementary" aria-label="Footer">
+            {% if footer_config.sidebar1 -%}
+            <div class="widget-column footer-widget-1">
+                {% include dynamo function="render_sidebar" sidebar=footer_config.sidebar1 indent_level=4 %}
+            </div>
+            {%- endif %}
+            {% if footer_config.sidebar2 -%}
+            <div class="widget-column footer-widget-2">
+                {% include dynamo function="render_sidebar" sidebar=footer_config.sidebar2 indent_level=4 %}
+            </div>
+            {%- endif %}
+        </aside>
+        {% endif -%}
+        {% if footer_config.social_links -%}
+        <nav class="social-navigation" role="navigation" aria-label="Footer Social Links Menu">
+            {% include dynamo function="render_navigation" 
+                nav=footer_config.social_links 
+                format="list" 
+                render_link_text_function="render_social_link_title" 
+                indent_level=3 %}
+        </nav>
+        {% endif -%}
+        <div class="site-info">
+            {% include dynamo function="get_config" of="site" key="privacy_policy_link" -%}
+            {% assign privacy_policy_link = config -%}
+            {% if privacy_policy_link %}
+            <a class="privacy-policy-link" href="{{ privacy_policy_link }}">{{ STRING__PRIVACY_POLICY }}</a>
+            <span role="separator" aria-hidden="true"></span>
+            {% endif %}
+            <a href="https://staticdynamo.com" class="imprint">Proudly powered by StaticDynamo</a>
+        </div><!-- .site-info -->
+    </div><!-- .wrap -->
+</footer>
+{% endif -%}

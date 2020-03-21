@@ -1,0 +1,23 @@
+- widget: search
+  settings:
+    title: 
+- widget: recent_posts
+  settings:
+    title: Recent Posts
+    num_of_posts: 5
+    display_post_date: true
+- widget: categories
+  settings:
+    title: Categories
+- widget: tag_cloud
+  settings: 
+    title: Tags
+    smallest: 10
+    largest: 15
+    unit: pt
+- widget: text
+  settings:
+    title: About This Site
+    content: >
+      This may be a good place to introduce yourself and your site or include 
+      some credits.

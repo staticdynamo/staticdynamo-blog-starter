@@ -1,0 +1,47 @@
+<div class="wrap">
+    <div id="primary" class="content-area">
+        <main id="main" class="site-main" role="main">
+            {% include dynamo function="get_config" of="theme" key="home.list_posts" -%}
+            {% assign home_list_posts_config = config -%}
+            {% if page.path contains "index." -%}
+                {% assign enable_pagination = home_list_posts_config.enable_pagination -%}
+            {% else -%}
+                {% assign enable_pagination = false -%}
+            {% endif -%}
+            {% if enable_pagination == true -%}
+                {% assign num_of_posts = -1 -%}
+                {% capture prev_page_text -%}
+                    {% include dynamo function="render_svg" icon="icon-arrow-left" -%}
+                    <span class="screen-reader-text">Previous page</span>
+                {%- endcapture -%}
+                {% capture prev_page_text -%}
+                    {% include dynamo function="compress_html" html=prev_page_text clippings="all" %}
+                {%- endcapture -%}
+                {% capture next_page_text -%}
+                    <span class="screen-reader-text">Next page</span>
+                    {% include dynamo function="render_svg" icon="icon-arrow-right" -%}
+                {%- endcapture -%}
+                {% capture next_page_text -%}
+                    {% include dynamo function="compress_html" html=next_page_text clippings="all" %}
+                {%- endcapture -%}
+                {% capture before_page_number -%}
+                    <span class="meta-nav screen-reader-text">Page </span>
+                {%- endcapture -%}
+            {% else -%}
+                {% assign num_of_posts = site.paginate | default: 5 -%}
+            {% endif -%}
+            {% include dynamo function="render_posts" 
+                format="flat" 
+                enable_pagination=enable_pagination 
+                num_of_posts=num_of_posts 
+                show_post_excerpt=home_list_posts_config.show_post_excerpt
+                show_post_content=home_list_posts_config.show_post_content 
+                render_post_function="render_post_in_post_list"
+                prev_page_text=prev_page_text
+                next_page_text=next_page_text
+                before_page_number=before_page_number
+                indent_level=3 %}
+        </main><!-- #main -->
+    </div><!-- #primary -->
+    {% include dynamo file="_includes/sidebar.html" indent_level=1 %}
+</div><!-- .wrap -->

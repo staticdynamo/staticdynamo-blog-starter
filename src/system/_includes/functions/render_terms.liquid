@@ -1,0 +1,244 @@
+{% comment -%}---------------------------------------------------------------------------
+Function: render_terms
+
+Description: Render a list of terms of the given taxonomy.  Each term is linked to the 
+    term archive page.
+
+Usage:
+    {% include dynamo function="render_terms" 
+        taxonomy="author" 
+        format="flat" 
+        separator=", " %}
+    The above code renders a list of authors for the current locale in the flat format. 
+    Authors are seperated by ", ".
+
+    {% include dynamo function="render_terms" 
+        taxonomy="author" 
+        num_of_terms=10 
+        order_by="size" 
+        order="DESC" 
+        format="list" 
+        show_size=true %}
+    The above code renders top 10 authors with the number of posts of each author for the 
+    current locale in the list format.
+
+Parameters:
+    * taxonomy                  (string) - Name of the taxonomy.
+    * names                     (array)  - An array of term names.
+    * where_exp                 (string) - Filter the terms based on the given where exp.
+                                           In the where_exp, use 'term' to refer to the 
+                                           term object. 
+    * locale                    (string) - Locale of the terms to get. 
+                                           Default: CURRENT_LOCALE. If locale equals 
+                                           site.locale, get all terms; otherwise, get terms 
+                                           of the given locale.
+    * hide_empty                (bool)   - Whether to hide terms with empty archive or not. 
+                                           Default: false, meaning that terms with empty 
+                                           archive will also be rendered.
+    * order_by                  (string) - Order the terms by "size" or any field of term 
+                                           (e.g. "name", "display_name")
+    * order                     (string) - "ASC" or "DESC".  The parameter is valid only 
+                                           when order_by is provided.
+
+    * format                    (string) - Format of the display.
+                                           "list" - an unordered list <ul>
+                                           "flat" - separated by 'separator'
+                                           "dropdown" - a dropdown list
+                                           "json" - json format
+    * num_of_terms              (int)    - The maximum number of terms to display.
+                                           Default to display all terms. 
+    * render_term_function      (string) - Filter function to overwrite the default term 
+                                           rendering.
+    * show_size                 (bool)   - Whether to show the term archive size or not. 
+                                           Default: false.
+    * before_link_text          (string) - Text that goes before the text of the link. 
+    * after_link_text           (string) - Text that goes after the text of the link. 
+
+    Parameters for the "list" format:
+    * container_class           (string) - CSS class to use for the ul element which 
+                                           forms the term list. 
+                                           Default: '{{taxonomy}}-list'.
+    * item_class           (string) - CSS class to use for the li element which 
+                                           forms the term list. 
+                                           Default: '{{taxonomy}}-item'.
+    
+    Parameters for the "flat" format:
+    * separator                 (string) - The text/space between terms. Default: " "
+
+------------------------------------------------------------------------{% endcomment -%}
+
+{% if include.params.taxonomy -%}
+
+    {% assign num_of_terms = include.params.num_of_terms | default: -1 -%}
+    {% if num_of_terms != 0 -%}
+
+    {% comment -%}Get terms{% endcomment -%}
+    {% include dynamo function="get_terms" 
+        taxonomy=include.params.taxonomy 
+        names=include.params.names 
+        where_exp=include.params.where_exp 
+        locale=include.params.locale 
+        hide_empty=include.params.hide_empty 
+        order_by=include.params.order_by 
+        order=include.params.order -%}
+
+    {% if terms.size > 0 -%}
+
+        {% comment -%}If term size is needed, get term sizes{% endcomment -%}
+        {% if include.params.show_size == true or include.params.order_by == "size" -%}
+            {% assign taxonomy_archive_settings = site.taxonomies[include.params.taxonomy].settings.archive -%}
+            {% include dynamo function="get_posts" 
+                post_collection=taxonomy_archive_settings.post_collection 
+                where_exp=taxonomy_archive_settings.where_exp 
+                locale=include.params.locale -%}
+            {% assign taxonomy_field = taxonomy_archive_settings.taxonomy_field | default: include.params.taxonomy -%}
+            {% assign term_names = terms | map: "name" -%}
+            {% assign nonempty_terms = posts | map: taxonomy_field | 
+                join: "," | join: "," | split: "," | group_by_exp: "item", "item" |
+                where_exp: "term", "term_names contains term.name" -%}
+        {% endif -%}
+
+        {% comment -%}Render terms ordered by archive size{% endcomment -%}
+        {% if include.params.order_by == "size" -%}
+            {% comment -%}Sort term sizes{% endcomment -%}
+            {% assign nonempty_terms = nonempty_terms | sort: "size" | reverse -%}
+
+            {% assign c = 0 -%}
+            {% case include.params.format -%}
+
+{%- comment -%}'list' format{% endcomment -%}
+{% when "list" -%}
+{% assign default_container_class = include.params.taxonomy | append: "-list" -%}
+{% assign default_item_class = include.params.taxonomy | append: "-item" -%}
+<ul class='{{ include.params.container_class | default: default_container_class }}'>
+    {% for nonempty_term in nonempty_terms -%}
+        {% if num_of_terms > 0 and c >= num_of_terms -%}
+            {% break -%}
+        {% endif -%}
+
+        {% assign term = terms | where: "name", nonempty_term.name | first -%}
+        {% if term -%}
+            {% assign c = c | plus: 1 -%}
+    <li class='{{ include.params.item_class | default: default_item_class }}'>
+        {% if include.params.render_term_function -%}
+            {% include dynamo function=include.params.render_term_function 
+                term=term 
+                size=nonempty_term.size 
+                indent_level=2 %}
+        {% else -%}
+        <a href='{{ term.url }}'>
+            {{ include.params.before_link_text }}{{ term.display_name | default: term.name }}{{ include.params.after_link_text -}}
+            {% if include.params.show_size == true -%}<span class="term-size"> ({{ nonempty_term.size }})</span>{%- endif %}
+        </a>
+        {%- endif %}
+    </li>
+        {%- endif %}
+    {%- endfor %}
+    {% if c < num_of_terms and include.params.hide_empty != true -%}
+        {% comment -%}Display some empty terms{% endcomment -%}
+    {% endif -%}
+</ul>
+
+{%- comment -%}'flat' format{% endcomment -%}
+{% when "flat" -%}
+{% for nonempty_term in nonempty_terms -%}
+    {% if num_of_terms > 0 and c >= num_of_terms -%}
+        {% break -%}
+    {% endif -%}
+
+    {% assign term = terms | where: "name", nonempty_term.name | first -%}
+    {% if term -%}
+        {% if c > 0 -%}{{ include.params.separator | default: " " }}{% endif -%}
+        {% assign c = c | plus: 1 -%}
+        {% if include.params.render_term_function -%}
+            {% include dynamo function=include.params.render_term_function 
+                term=term 
+                size=nonempty_term.size %}
+        {% else -%}
+<a href='{{ term.url }}'>
+    {{ include.params.before_link_text }}{{ term.display_name | default: term.name }}{{ include.params.after_link_text -}}
+    {% if include.params.show_size == true -%}<span class="term-size"> ({{ nonempty_term.size }})</span>{%- endif %}
+</a>
+        {%- endif %}
+    {%- endif %}
+{% endfor -%}
+{% if c < num_of_terms and include.params.hide_empty != true -%}
+    {% comment -%}Display some empty terms{% endcomment -%}
+{% endif -%}
+
+            {% endcase -%}
+
+        {% else -%}
+        {% comment -%}Render terms ordered by any other fields{% endcomment -%}
+
+            {% assign c = 0 -%}
+            {% case include.params.format -%}
+
+{%- comment -%}'list' format{% endcomment -%}
+{% when "list" -%}
+{% assign default_container_class = include.params.taxonomy | append: "-list" -%}
+{% assign default_item_class = include.params.taxonomy | append: "-item" -%}
+<ul class='{{ include.params.container_class | default: default_container_class }}'>
+    {% for term in terms -%}
+        {% if num_of_terms > 0 and c >= num_of_terms -%}
+            {% break -%}
+        {% endif -%}
+
+        {% assign c = c | plus: 1 -%}
+        {% if include.params.show_size == true -%}
+            {% assign term_size = nonempty_terms | where: "name", term.name | map: "size" | first | default: 0 -%}
+        {% else -%}
+            {% assign term_size = nil -%}
+        {% endif -%}
+    <li class='{{ include.params.item_class | default: default_item_class }}'>
+        {% if include.params.render_term_function -%}
+            {% include dynamo function=include.params.render_term_function 
+                term=term 
+                size=term_size 
+                indent_level=2 %}
+        {% else -%}
+        <a href='{{ term.url }}'>
+            {{ include.params.before_link_text }}{{ term.display_name | default: term.name }}{{ include.params.after_link_text -}}
+            {% if include.params.show_size == true -%}
+                <span class="term-size"> ({{ term_size }})</span>
+            {%- endif %}
+        </a>
+        {%- endif %}
+    </li>
+    {%- endfor %}
+</ul>
+
+{%- comment -%}'flat' format{% endcomment -%}
+{% when "flat" -%}
+{% for term in terms -%}
+    {% if num_of_terms > 0 and c >= num_of_terms -%}
+        {% break -%}
+    {% endif -%}
+
+    {% if c > 0 -%}{{ include.params.separator | default: " " }}{% endif -%}
+    {% assign c = c | plus: 1 -%}
+    {% if include.params.show_size == true -%}
+        {% assign term_size = nonempty_terms | where: "name", term.name | map: "size" | first | default: 0 -%}
+    {% else -%}
+        {% assign term_size = nil -%}
+    {% endif -%}
+
+    {% if include.params.render_term_function -%}
+        {% include dynamo function=include.params.render_term_function 
+            term=term 
+            size=term_size %}
+    {% else -%}
+<a href='{{ term.url }}'>
+    {{ include.params.before_link_text }}{{ term.display_name | default: term.name }}{{ include.params.after_link_text -}}
+    {% if include.params.show_size == true -%}
+        <span class="term-size"> ({{ term_size }})</span>
+    {%- endif %}
+</a>
+    {%- endif %}
+{% endfor -%}
+
+            {% endcase -%}
+        {% endif -%}
+
+    {% endif -%}
+{% endif -%}

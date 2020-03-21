@@ -1,0 +1,11 @@
+- widget: text
+  settings:
+    title: Find Us
+    content: |
+      **Address** <br />
+      123 Main Street <br />
+      Redmond, WA 98052
+
+      **Hours** <br />
+      Monday—Friday: 9:00AM–5:00PM <br />
+      Saturday &amp; Sunday: 11:00AM–3:00PM

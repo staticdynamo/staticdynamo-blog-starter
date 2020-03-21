@@ -1,0 +1,67 @@
+{% comment -%}---------------------------------------------------------------------------
+Function: get_tags
+
+Description: Get a list of tags.
+
+Usage:
+    {% include dynamo function="get_tags" -%}
+    The above code gets a list of tags of the current locale. 
+
+Parameters:
+    * names                 (array)  - An array of tag names (e.g. post.tags). If the 
+                                       names parameter is empty, the result is empty.  If 
+                                       the names parameter is nil or not provided, the 
+                                       result is based on the other parameters. 
+    * where_exp             (string) - Filter the tags based on the given where exp. 
+                                       In the where_exp, use 'tag' to refer to the tag 
+                                       object. 
+    * locale                (string) - Locale of the tags to get. 
+                                       Default: CURRENT_LOCALE. If locale equals 
+                                       site.locale, get all tags; otherwise, get tags of 
+                                       the given locale.
+    * hide_empty            (bool)   - Whether to hide tags with empty archive or not. 
+                                       Default: false, meaning that tags with empty 
+                                       archive will also be returned.
+    * order_by              (string) - "name", "display_name" or any field of tag
+    * order                 (string) - "ASC" or "DESC".  The parameter is valid only when 
+                                       order_by is provided.
+
+------------------------------------------------------------------------{% endcomment -%}
+
+{% if include.params.names == empty -%}
+    {% assign tags = empty -%}
+{% else -%}
+    {% assign tags = site.terms | where: "taxonomy", "tag" -%}
+
+    {% if include.params.names -%}
+        {% assign tags = tags | where_exp: "tag", "include.params.names contains tag.name" -%}
+    {% endif -%}
+
+    {% if incldue.params.where_exp -%}
+        {% assign tags = tags | where_exp: "tag", include.params.where_exp -%}
+    {% endif -%}
+
+    {% assign locale = include.params.locale | default: CURRENT_LOCALE -%}
+    {% if locale and locale != site.locale -%}
+        {% assign tags = tags | where: "locale", locale -%}
+    {% endif -%}
+
+    {% if include.params.hide_empty == true -%}
+        {% comment -%}Remove empty tags{% endcomment -%}
+        {% assign tag_archive_settings = site.taxonomies.tag.settings.archive -%}
+        {% include dynamo function="get_posts" 
+            post_collection=tag_archive_settings.post_collection 
+            where_exp=tag_archive_settings.where_exp -%}
+        {% assign taxonomy_field = tag_archive_settings.taxonomy_field | default: "tags" -%}
+        {% assign nonempty_tags = posts | map: taxonomy_field | 
+            join: "," | join: "," | split: "," | group_by_exp: "item", "item" | map: "name" -%}
+        {% assign tags = tags | where_exp: "tag", "nonempty_tags contains tag.name" -%}
+    {% endif -%}
+
+    {% if include.params.order_by -%}
+        {% assign tags = tags | sort: include.params.order_by -%}
+        {% if include.params.order == "DESC" -%}
+            {% assign tags = tags | reverse -%}
+        {% endif -%}
+    {% endif -%}
+{% endif -%}
